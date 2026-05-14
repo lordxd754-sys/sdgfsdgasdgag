@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { aiComplete } from "@/lib/ai";
+import { aiComplete, extractJson } from "@/lib/ai";
 
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -58,10 +58,10 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
 
   try {
     const text = await aiComplete(prompt, 4096);
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON in response");
+    const jsonStr = extractJson(text);
+    if (!jsonStr) throw new Error("No JSON in response");
 
-    const workoutData = JSON.parse(jsonMatch[0]);
+    const workoutData = JSON.parse(jsonStr);
 
     // Delete existing sessions (exercises are cascade deleted)
     await supabase.from("WorkoutSession").delete().eq("workoutId", id);

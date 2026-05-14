@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { aiComplete } from "@/lib/ai";
+import { aiComplete, extractJson } from "@/lib/ai";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -95,8 +95,8 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
     let workoutData: any;
     try {
       const text = await aiComplete(prompt, 4096);
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      workoutData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      const jsonStr = extractJson(text);
+      workoutData = jsonStr ? JSON.parse(jsonStr) : null;
     } catch (e) {
       console.error("AI generation error:", e);
       return NextResponse.json({ error: "Erro ao gerar treino com IA" }, { status: 500 });
