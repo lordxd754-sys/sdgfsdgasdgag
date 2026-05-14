@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import Anthropic from "@anthropic-ai/sdk";
+import { aiComplete } from "@/lib/ai";
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -38,9 +38,6 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
   const settings = await prisma.settings.findFirst();
 
   if (body.generate) {
-    // AI generation
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
     const prompt = `Você é um personal trainer especializado com 10 anos de experiência em consultoria online.
 Analise os dados abaixo e gere um plano de treino completo e detalhado.
 
@@ -79,13 +76,7 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
 
     let workoutData: any;
     try {
-      const msg = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 4096,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const text = msg.content[0].type === "text" ? msg.content[0].text : "";
+      const text = await aiComplete(prompt, 4096);
       const jsonMatch = text.match(/\{[\s\S]*\}/);
       workoutData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
     } catch (e) {

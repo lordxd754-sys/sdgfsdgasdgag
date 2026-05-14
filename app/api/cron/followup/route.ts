@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import Anthropic from "@anthropic-ai/sdk";
+import { aiComplete } from "@/lib/ai";
 import nodemailer from "nodemailer";
 
 export async function GET(req: NextRequest) {
@@ -26,7 +26,6 @@ export async function GET(req: NextRequest) {
   });
 
   const results: string[] = [];
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 
   for (const student of students) {
     try {
@@ -47,13 +46,7 @@ Template base: ${template}
 
 Retorne APENAS o texto da mensagem.`;
 
-      const msg = await client.messages.create({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 500,
-        messages: [{ role: "user", content: prompt }],
-      });
-
-      const message = msg.content[0].type === "text" ? msg.content[0].text.trim() : "";
+      const message = await aiComplete(prompt, 500);
 
       if (settings?.autoFollowUp && message) {
         let sendStatus = "enviado";

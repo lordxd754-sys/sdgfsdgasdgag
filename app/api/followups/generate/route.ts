@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import Anthropic from "@anthropic-ai/sdk";
+import { aiComplete } from "@/lib/ai";
 import { daysSince } from "@/lib/utils";
 
 export async function POST(req: NextRequest) {
@@ -27,8 +27,6 @@ export async function POST(req: NextRequest) {
     settings?.followUpTemplate ??
     "Olá {nome}! Tudo bem? Passando para ver como está indo o {treino_atual}. Qualquer dúvida pode me chamar!";
 
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
-
   const lastWorkout = student.workouts[0]?.title ?? "treino atual";
   const dias = daysSince(student.lastContactAt ?? student.createdAt);
 
@@ -48,13 +46,7 @@ ${template}
 Retorne APENAS o texto da mensagem, sem aspas ou formatação extra.`;
 
   try {
-    const msg = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 500,
-      messages: [{ role: "user", content: prompt }],
-    });
-
-    const message = msg.content[0].type === "text" ? msg.content[0].text.trim() : "";
+    const message = await aiComplete(prompt, 500);
     return NextResponse.json({ message });
   } catch (e) {
     console.error("Generate follow-up error:", e);
