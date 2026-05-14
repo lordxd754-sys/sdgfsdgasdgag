@@ -36,14 +36,21 @@ export async function POST(req: NextRequest) {
         subject: "Acompanhamento do seu personal trainer",
         text: message,
       });
-    } else if (channel === "whatsapp" && settings?.zapiToken && settings?.zapiInstance) {
+    } else if (
+      channel === "whatsapp" &&
+      settings?.zapiToken?.trim() &&
+      settings?.zapiInstance?.trim() &&
+      settings?.zapiClientToken?.trim()
+    ) {
       const rawPhone = student.phone ?? settings.zapiPhone;
       if (rawPhone) {
         const phone = String(rawPhone).replace(/\D/g, "");
-        const headers: Record<string, string> = { "Content-Type": "application/json" };
-        if (settings.zapiClientToken) headers["Client-Token"] = settings.zapiClientToken;
+        const headers: Record<string, string> = {
+          "Content-Type": "application/json",
+          "Client-Token": settings.zapiClientToken.trim(),
+        };
         const zapiRes = await fetch(
-          `https://api.z-api.io/instances/${settings.zapiInstance}/token/${settings.zapiToken}/send-text`,
+          `https://api.z-api.io/instances/${settings.zapiInstance.trim()}/token/${settings.zapiToken.trim()}/send-text`,
           {
             method: "POST",
             headers,

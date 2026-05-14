@@ -2,62 +2,81 @@ import { NextRequest, NextResponse } from "next/server";
 import { timingSafeEqual } from "crypto";
 import { supabase } from "@/lib/supabase";
 
-export async function POST(req: NextRequest) {
-  // Validate secret token in query param against the DB-stored jotformSecret.
-  // Configure webhook URL in Jotform as: /api/webhooks/jotform?secret=SEU_SECRET
-  const { data: settings } = await supabase.from("Settings").select("jotformSecret").limit(1).maybeSingle();
-  const webhookSecret = (settings as any)?.jotformSecret as string | null | undefined;
-  if (webhookSecret) {
-    const { searchParams } = new URL(req.url);
-    const provided = searchParams.get("secret") ?? "";
-    const match =
-      provided.length === webhookSecret.length &&
-      timingSafeEqual(Buffer.from(provided), Buffer.from(webhookSecret));
-    if (!match) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+function safeEqual(a: string, b: string) {
+  return (
+    a.length === b.length &&
+    timingSafeEqual(Buffer.from(a), Buffer.from(b))
+  );
+}
+
+async function getWebhookSecrets() {
+  const secrets = [process.env.JOTFORM_WEBHOOK_SECRET?.trim()].filter(Boolean) as string[];
+
+  const { data: settings } = await supabase
+    .from("Settings")
+    .select("jotformSecret")
+    .limit(1)
+    .maybeSingle();
+
+  const settingsSecret = (settings as any)?.jotformSecret?.trim();
+  if (settingsSecret) secrets.push(settingsSecret);
+
+  return Array.from(new Set(secrets));
+}
+
+async function parseWebhookBody(req: NextRequest) {
+  const contentType = req.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    return JSON.stringify(await req.json());
+  }
+
+  const outer: Record<string, string> = {};
+
+  if (contentType.includes("multipart/form-data")) {
+    const form = await req.formData();
+    form.forEach((v, k) => {
+      outer[k] = typeof v === "string" ? v : v.name;
+    });
+  } else {
+    const text = await req.text();
+    if (!contentType.includes("application/x-www-form-urlencoded")) {
+      try {
+        JSON.parse(text);
+        return text;
+      } catch {
+        // Fall through and try URLSearchParams; Jotform usually sends form-style payloads.
+      }
+    }
+
+    const params = new URLSearchParams(text);
+    params.forEach((v, k) => (outer[k] = v));
+  }
+
+  if (outer.rawRequest) {
+    try {
+      const inner = JSON.parse(outer.rawRequest);
+      return JSON.stringify({ ...outer, ...inner });
+    } catch {
+      return JSON.stringify(outer);
     }
   }
 
+  return JSON.stringify(outer);
+}
+
+export async function POST(req: NextRequest) {
+  // Validate secret token in query param against env or DB-stored jotformSecret.
+  // Configure webhook URL in Jotform as: /api/webhooks/jotform?secret=SEU_SECRET
+  const { searchParams } = new URL(req.url);
+  const provided = searchParams.get("secret") ?? req.headers.get("x-jotform-secret") ?? "";
+  const secrets = await getWebhookSecrets();
+  if (secrets.length > 0 && !secrets.some((secret) => safeEqual(provided, secret))) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
-    const contentType = req.headers.get("content-type") ?? "";
-    let rawData: string;
-
-    if (contentType.includes("application/x-www-form-urlencoded")) {
-      const text = await req.text();
-      const params = new URLSearchParams(text);
-      const outer: Record<string, string> = {};
-      params.forEach((v, k) => (outer[k] = v));
-
-      // Jotform embeds the actual submission JSON in `rawRequest`
-      if (outer.rawRequest) {
-        try {
-          const inner = JSON.parse(outer.rawRequest);
-          // Merge top-level fields (q3_name, q4_email…) into the parsed object
-          // so extraction works regardless of which format the form uses
-          rawData = JSON.stringify({ ...outer, ...inner });
-        } catch {
-          rawData = JSON.stringify(outer);
-        }
-      } else {
-        rawData = JSON.stringify(outer);
-      }
-    } else if (contentType.includes("application/json")) {
-      const body = await req.json();
-      rawData = JSON.stringify(body);
-    } else {
-      const text = await req.text();
-      // Try to parse as JSON anyway
-      try {
-        JSON.parse(text);
-        rawData = text;
-      } catch {
-        // Treat as form-urlencoded fallback
-        const params = new URLSearchParams(text);
-        const obj: Record<string, string> = {};
-        params.forEach((v, k) => (obj[k] = v));
-        rawData = JSON.stringify(obj);
-      }
-    }
+    const rawData = await parseWebhookBody(req);
 
     const { error } = await supabase
       .from("FormResponse")

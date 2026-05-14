@@ -29,31 +29,55 @@ export async function POST(req: NextRequest, { params }: { params: { type: strin
   }
 
   if (type === "zapi") {
-    if (!settings?.zapiToken || !settings?.zapiInstance) {
-      return NextResponse.json({ success: false, error: "Zapi não configurado" });
+    const zapiInstance = settings?.zapiInstance?.trim();
+    const zapiToken = settings?.zapiToken?.trim();
+    const zapiClientToken = settings?.zapiClientToken?.trim();
+
+    if (!zapiInstance || !zapiToken || !zapiClientToken) {
+      return NextResponse.json({
+        success: false,
+        error: "Zapi não configurado: preencha Instance ID, Token e Client Token.",
+      });
     }
     try {
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (settings.zapiClientToken) headers["Client-Token"] = settings.zapiClientToken;
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Client-Token": zapiClientToken,
+      };
 
       const res = await fetch(
-        `https://api.z-api.io/instances/${settings.zapiInstance}/token/${settings.zapiToken}/status`,
+        `https://api.z-api.io/instances/${zapiInstance}/token/${zapiToken}/status`,
         { headers }
       );
       if (!res.ok) {
-        return NextResponse.json({ success: false, error: `HTTP ${res.status}` });
+        const errorText = await res.text();
+        return NextResponse.json({
+          success: false,
+          error: `Zapi respondeu HTTP ${res.status}${errorText ? `: ${errorText}` : ""}`,
+        });
       }
       const data = await res.json();
-      if (data.connected) {
+      if (data.connected && data.smartphoneConnected !== false) {
         return NextResponse.json({ success: true });
       }
-      return NextResponse.json({ success: false, error: data.message ?? "Não conectado" });
+      return NextResponse.json({
+        success: false,
+        error: data.error ?? data.message ?? "Instância Zapi não conectada ao WhatsApp.",
+      });
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message });
     }
   }
 
   if (type === "jotform") {
+    const hasSecret = Boolean(settings?.jotformSecret?.trim() || process.env.JOTFORM_WEBHOOK_SECRET?.trim());
+    if (!hasSecret) {
+      return NextResponse.json({
+        success: false,
+        error: "Configure um Webhook Secret antes de conectar o Jotform.",
+      });
+    }
+
     return NextResponse.json({
       success: true,
       message: "Configure o webhook no Jotform para a URL mostrada",

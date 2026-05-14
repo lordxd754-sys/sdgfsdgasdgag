@@ -7,6 +7,12 @@ const SENSITIVE_KEYS = ["jotformSecret", "zapiToken", "zapiClientToken", "smtpPa
 
 type SettingsRow = Record<string, unknown>;
 
+function cleanString(v: unknown): string | null {
+  if (typeof v !== "string") return v == null ? null : String(v).trim();
+  const cleaned = v.trim();
+  return cleaned ? cleaned : null;
+}
+
 function maskSettings(settings: SettingsRow | null): SettingsRow {
   if (!settings) return {};
   const out: SettingsRow = { ...settings };
@@ -43,21 +49,21 @@ export async function PUT(req: NextRequest) {
   // Build update payload; skip sensitive fields if the client sent back the masked placeholder
   const sensitive = existing as SettingsRow | null;
   const data: SettingsRow = {
-    zapiInstance: body.zapiInstance ?? null,
-    zapiPhone: body.zapiPhone ?? null,
-    smtpHost: body.smtpHost ?? null,
+    zapiInstance: cleanString(body.zapiInstance),
+    zapiPhone: cleanString(body.zapiPhone),
+    smtpHost: cleanString(body.smtpHost),
     smtpPort: body.smtpPort ? parseInt(String(body.smtpPort)) : null,
-    smtpUser: body.smtpUser ?? null,
-    smtpFrom: body.smtpFrom ?? null,
-    followUpTemplate: body.followUpTemplate ?? null,
+    smtpUser: cleanString(body.smtpUser),
+    smtpFrom: cleanString(body.smtpFrom),
+    followUpTemplate: cleanString(body.followUpTemplate),
     autoFollowUp: body.autoFollowUp ?? false,
     followUpHour: body.followUpHour ? parseInt(String(body.followUpHour)) : 8,
-    workoutPreferences: body.workoutPreferences ?? null,
+    workoutPreferences: cleanString(body.workoutPreferences),
     // Sensitive: only overwrite when user supplied a real new value
-    jotformSecret: isMasked(body.jotformSecret) ? (sensitive?.jotformSecret ?? null) : (body.jotformSecret ?? null),
-    zapiToken: isMasked(body.zapiToken) ? (sensitive?.zapiToken ?? null) : (body.zapiToken ?? null),
-    zapiClientToken: isMasked(body.zapiClientToken) ? (sensitive?.zapiClientToken ?? null) : (body.zapiClientToken ?? null),
-    smtpPass: isMasked(body.smtpPass) ? (sensitive?.smtpPass ?? null) : (body.smtpPass ?? null),
+    jotformSecret: isMasked(body.jotformSecret) ? (sensitive?.jotformSecret ?? null) : cleanString(body.jotformSecret),
+    zapiToken: isMasked(body.zapiToken) ? (sensitive?.zapiToken ?? null) : cleanString(body.zapiToken),
+    zapiClientToken: isMasked(body.zapiClientToken) ? (sensitive?.zapiClientToken ?? null) : cleanString(body.zapiClientToken),
+    smtpPass: isMasked(body.smtpPass) ? (sensitive?.smtpPass ?? null) : cleanString(body.smtpPass),
   };
 
   let settings: unknown;
