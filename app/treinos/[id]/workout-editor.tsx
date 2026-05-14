@@ -164,9 +164,9 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
   }
 
   const exportText = workout.sessions
-    .map((s) => {
+    .map((s: (typeof workout.sessions)[number]) => {
       const exLines = s.exercises.map(
-        (ex, i) =>
+        (ex: (typeof s.exercises)[number], i: number) =>
           `  ${i + 1}. ${ex.name} | ${ex.sets}x${ex.reps} | ${ex.rest}s descanso${ex.notes ? ` | ${ex.notes}` : ""}`
       );
       return `${s.name}\n${exLines.join("\n")}`;

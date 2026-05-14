@@ -123,7 +123,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {metrics.map((m) => {
+        {metrics.map((m: (typeof metrics)[number]) => {
           const Icon = m.icon;
           return (
             <Card key={m.label} className="relative overflow-hidden">
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="divide-y divide-[#2a2a2a]">
-              {needsAttention.map((student) => {
+              {needsAttention.map((student: (typeof needsAttention)[number]) => {
                 const hasWorkout = student.workouts.length > 0;
                 const days = daysSince(student.lastContactAt ?? student.createdAt);
                 return (

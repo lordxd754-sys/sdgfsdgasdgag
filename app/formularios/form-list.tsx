@@ -110,7 +110,7 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
                   </td>
                 </tr>
               )}
-              {forms.map((form) => {
+              {forms.map((form: (typeof forms)[number]) => {
                 const { name, email } = extractFromRaw(form.rawData);
                 return (
                   <tr key={form.id} className="hover:bg-[#1f1f1f] transition-colors">

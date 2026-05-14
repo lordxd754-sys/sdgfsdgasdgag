@@ -111,7 +111,7 @@ export function FollowUpList({
       </div>
 
       <div className="space-y-2">
-        {students.map((student) => {
+        {students.map((student: (typeof students)[number]) => {
           const days = daysSince(student.lastContactAt ?? student.createdAt);
           const urgency = days > 15 ? "red" : days > 12 ? "yellow" : "green";
 

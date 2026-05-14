@@ -20,9 +20,9 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   if (!workout) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
   const text = workout.sessions
-    .map((s) => {
+    .map((s: (typeof workout.sessions)[number]) => {
       const lines = s.exercises.map(
-        (ex, i) =>
+        (ex: (typeof s.exercises)[number], i: number) =>
           `  ${i + 1}. ${ex.name} | ${ex.sets}x${ex.reps} | ${ex.rest}s descanso${ex.notes ? ` | ${ex.notes}` : ""}`
       );
       return `${s.name}\n${lines.join("\n")}`;
