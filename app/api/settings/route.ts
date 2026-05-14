@@ -62,15 +62,23 @@ export async function PUT(req: NextRequest) {
 
   let settings: unknown;
   if (existing) {
-    const { data: updated } = await supabase
+    const { data: updated, error } = await supabase
       .from("Settings")
       .update(data)
       .eq("id", (existing as any).id)
       .select()
       .single();
+    if (error) {
+      console.error("Settings update error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     settings = updated;
   } else {
-    const { data: created } = await supabase.from("Settings").insert(data).select().single();
+    const { data: created, error } = await supabase.from("Settings").insert(data).select().single();
+    if (error) {
+      console.error("Settings insert error:", error);
+      return NextResponse.json({ error: error.message }, { status: 500 });
+    }
     settings = created;
   }
 

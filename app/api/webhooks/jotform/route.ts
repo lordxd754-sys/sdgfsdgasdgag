@@ -3,9 +3,10 @@ import { timingSafeEqual } from "crypto";
 import { supabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
-  // Validate secret token in query param.
-  // Configure webhook URL in Jotform as: /api/webhooks/jotform?secret=YOUR_SECRET
-  const webhookSecret = process.env.JOTFORM_WEBHOOK_SECRET;
+  // Validate secret token in query param against the DB-stored jotformSecret.
+  // Configure webhook URL in Jotform as: /api/webhooks/jotform?secret=SEU_SECRET
+  const { data: settings } = await supabase.from("Settings").select("jotformSecret").limit(1).maybeSingle();
+  const webhookSecret = (settings as any)?.jotformSecret as string | null | undefined;
   if (webhookSecret) {
     const { searchParams } = new URL(req.url);
     const provided = searchParams.get("secret") ?? "";
