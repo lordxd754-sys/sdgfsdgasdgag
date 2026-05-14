@@ -98,7 +98,7 @@ export default async function AlunosPage({
                   </td>
                 </tr>
               )}
-              {students.map((student) => {
+              {students.map((student: (typeof students)[number]) => {
                 const days = daysSince(student.lastContactAt ?? undefined);
                 const hasWorkout = student.workouts.length > 0;
                 const contactUrgent = days > 15;
