@@ -75,7 +75,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     for (const [si, s] of body.sessions.entries()) {
       const { data: ws } = await supabase
         .from("WorkoutSession")
-        .insert({ workoutId: id, name: s.name, order: s.order ?? si + 1 })
+        .insert({ id: crypto.randomUUID(), workoutId: id, name: s.name, order: s.order ?? si + 1 })
         .select()
         .single();
 
@@ -85,6 +85,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
           const { data: exercise } = await supabase
             .from("Exercise")
             .insert({
+              id: crypto.randomUUID(),
               sessionId: (ws as any).id,
               name: ex.name,
               sets: parseInt(String(ex.sets)) || 3,

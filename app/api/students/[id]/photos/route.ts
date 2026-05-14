@@ -42,7 +42,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const url = `/uploads/${filename}`;
     const { data: photo } = await supabase
       .from("Photo")
-      .insert({ studentId: id, url, angle })
+      .insert({ id: randomUUID(), studentId: id, url, angle })
       .select()
       .single();
 

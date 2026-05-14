@@ -80,7 +80,11 @@ export async function PUT(req: NextRequest) {
     }
     settings = updated;
   } else {
-    const { data: created, error } = await supabase.from("Settings").insert(data).select().single();
+    const { data: created, error } = await supabase
+      .from("Settings")
+      .insert({ id: crypto.randomUUID(), ...data })
+      .select()
+      .single();
     if (error) {
       console.error("Settings insert error:", error);
       return NextResponse.json({ error: error.message }, { status: 500 });

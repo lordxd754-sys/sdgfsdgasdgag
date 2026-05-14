@@ -35,7 +35,11 @@ function flattenJotformField(val: unknown): string {
 
 function extractFromRaw(rawData: string) {
   try {
-    const data = JSON.parse(rawData);
+    const parsed = JSON.parse(rawData);
+    const data =
+      typeof parsed.rawRequest === "string"
+        ? { ...parsed, ...JSON.parse(parsed.rawRequest) }
+        : parsed;
 
     // Scan all keys for name-like fields (handles any q-number prefix)
     const findField = (...keys: string[]) => {
@@ -97,16 +101,12 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
 
     if (res.ok) {
       const student = await res.json();
-      await fetch(`/api/forms/${createModal.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "processado", studentId: student.id }),
-      });
       toast("Aluno criado com sucesso!");
       setCreateModal(null);
       router.refresh();
     } else {
-      toast("Erro ao criar aluno", "error");
+      const data = await res.json().catch(() => null);
+      toast(data?.error ?? "Erro ao criar aluno", "error");
     }
     setCreating(false);
   }

@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     const { data: student, error } = await supabase
       .from("Student")
       .insert({
+        id: crypto.randomUUID(),
         name: data.name,
         email: data.email,
         phone: data.phone || null,
@@ -75,10 +76,11 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
+      console.error("Student insert error:", error);
       if (error.code === "23505") {
         return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
       }
-      return NextResponse.json({ error: "Erro ao criar aluno" }, { status: 500 });
+      return NextResponse.json({ error: error.message ?? "Erro ao criar aluno" }, { status: 500 });
     }
 
     if (formId) {
@@ -90,6 +92,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(student, { status: 201 });
   } catch (error: any) {
-    return NextResponse.json({ error: "Erro ao criar aluno" }, { status: 500 });
+    console.error("Student create error:", error);
+    return NextResponse.json({ error: error?.message ?? "Erro ao criar aluno" }, { status: 500 });
   }
 }

@@ -105,6 +105,7 @@ Retorne APENAS o texto da mensagem.`;
         }
 
         await supabase.from("FollowUp").insert({
+          id: crypto.randomUUID(),
           studentId: student.id,
           message,
           channel,
@@ -122,6 +123,7 @@ Retorne APENAS o texto da mensagem.`;
         results.push(`${student.name}: ${sendStatus}`);
       } else {
         await supabase.from("FollowUp").insert({
+          id: crypto.randomUUID(),
           studentId: student.id,
           message,
           channel: "email",

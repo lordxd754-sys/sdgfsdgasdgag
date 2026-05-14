@@ -82,7 +82,7 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
     for (const s of workoutData.sessions) {
       const { data: ws } = await supabase
         .from("WorkoutSession")
-        .insert({ workoutId: id, name: s.name, order: s.order })
+        .insert({ id: crypto.randomUUID(), workoutId: id, name: s.name, order: s.order })
         .select()
         .single();
 
@@ -92,6 +92,7 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
           const { data: exercise } = await supabase
             .from("Exercise")
             .insert({
+              id: crypto.randomUUID(),
               sessionId: (ws as any).id,
               name: ex.name,
               sets: ex.sets,

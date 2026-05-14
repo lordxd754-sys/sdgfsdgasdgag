@@ -72,6 +72,7 @@ export async function POST(req: NextRequest) {
   const { data: followUp } = await supabase
     .from("FollowUp")
     .insert({
+      id: crypto.randomUUID(),
       studentId,
       message,
       channel,

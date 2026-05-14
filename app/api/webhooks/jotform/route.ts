@@ -28,7 +28,16 @@ async function parseWebhookBody(req: NextRequest) {
   const contentType = req.headers.get("content-type") ?? "";
 
   if (contentType.includes("application/json")) {
-    return JSON.stringify(await req.json());
+    const outer = await req.json();
+    if (outer?.rawRequest) {
+      try {
+        const inner = JSON.parse(outer.rawRequest);
+        return JSON.stringify({ ...outer, ...inner });
+      } catch {
+        return JSON.stringify(outer);
+      }
+    }
+    return JSON.stringify(outer);
   }
 
   const outer: Record<string, string> = {};
