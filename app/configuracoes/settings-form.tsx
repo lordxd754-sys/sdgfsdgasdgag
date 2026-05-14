@@ -26,6 +26,8 @@ type Settings = {
   workoutPreferences?: string | null;
 };
 
+const MASKED = "••••••••";
+
 export function SettingsForm({ settings: initial }: { settings: Settings | null }) {
   const { toast } = useToast();
   const [tab, setTab] = useState<"integracoes" | "templates" | "treinos">("integracoes");
@@ -90,15 +92,18 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
               <div className="space-y-1.5">
                 <Label>Webhook Secret</Label>
                 <Input
-                  value={form.jotformSecret ?? ""}
+                  value={form.jotformSecret === MASKED ? "" : (form.jotformSecret ?? "")}
                   onChange={(e) => set("jotformSecret", e.target.value)}
-                  placeholder="Secret para validar webhooks"
+                  placeholder={form.jotformSecret === MASKED ? "Já configurado — deixe em branco para manter" : "Secret para validar webhooks"}
                   type="password"
                 />
               </div>
-              <div className="rounded-lg bg-[#0f0f0f] p-3">
-                <p className="text-xs text-gray-500">URL do webhook para configurar no Jotform:</p>
-                <code className="text-xs text-green-400">{typeof window !== "undefined" ? window.location.origin : "https://seu-app.vercel.app"}/api/webhooks/jotform</code>
+              <div className="rounded-lg bg-[#0f0f0f] p-3 space-y-1">
+                <p className="text-xs text-gray-500">URL do webhook para configurar no Jotform (inclua o secret para validação):</p>
+                <code className="text-xs text-green-400 break-all">
+                  {typeof window !== "undefined" ? window.location.origin : "https://seu-app.vercel.app"}/api/webhooks/jotform
+                  {form.jotformSecret && form.jotformSecret !== MASKED ? `?secret=${form.jotformSecret}` : "?secret=SEU_SECRET"}
+                </code>
               </div>
               <Button variant="outline" size="sm" onClick={() => test("jotform")} disabled={testing === "jotform"}>
                 {testing === "jotform" ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4" />}
@@ -113,7 +118,12 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label>Token</Label>
-                  <Input value={form.zapiToken ?? ""} onChange={(e) => set("zapiToken", e.target.value)} type="password" />
+                  <Input
+                    value={form.zapiToken === MASKED ? "" : (form.zapiToken ?? "")}
+                    onChange={(e) => set("zapiToken", e.target.value)}
+                    type="password"
+                    placeholder={form.zapiToken === MASKED ? "Já configurado" : "Token da instância"}
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label>Instance ID</Label>
@@ -121,7 +131,12 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Client Token</Label>
-                  <Input value={form.zapiClientToken ?? ""} onChange={(e) => set("zapiClientToken", e.target.value)} type="password" placeholder="Security Client Token do painel Zapi" />
+                  <Input
+                    value={form.zapiClientToken === MASKED ? "" : (form.zapiClientToken ?? "")}
+                    onChange={(e) => set("zapiClientToken", e.target.value)}
+                    type="password"
+                    placeholder={form.zapiClientToken === MASKED ? "Já configurado" : "Security Client Token do painel Zapi"}
+                  />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>Telefone padrão</Label>
@@ -153,7 +168,12 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
                 </div>
                 <div className="space-y-1.5">
                   <Label>Senha</Label>
-                  <Input value={form.smtpPass ?? ""} onChange={(e) => set("smtpPass", e.target.value)} type="password" />
+                  <Input
+                    value={form.smtpPass === MASKED ? "" : (form.smtpPass ?? "")}
+                    onChange={(e) => set("smtpPass", e.target.value)}
+                    type="password"
+                    placeholder={form.smtpPass === MASKED ? "Já configurado" : "Senha do e-mail"}
+                  />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
                   <Label>E-mail remetente</Label>

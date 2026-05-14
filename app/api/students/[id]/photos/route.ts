@@ -1,8 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
+import { randomUUID } from "crypto";
 import { auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_MIME_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
 
 export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -16,12 +25,15 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     const angle = (formData.get("angle") as string) ?? "frente";
 
     if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
+    if (file.size > MAX_FILE_SIZE) return NextResponse.json({ error: "File too large (max 5 MB)" }, { status: 413 });
+    if (!ALLOWED_MIME_TYPES.has(file.type)) return NextResponse.json({ error: "Invalid file type. Use JPEG, PNG or WebP" }, { status: 415 });
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    const ext = file.name.split(".").pop() ?? "jpg";
-    const filename = `${id}-${Date.now()}.${ext}`;
+    // Use server-generated filename — never trust client-supplied name/extension
+    const ext = MIME_TO_EXT[file.type];
+    const filename = `${id}-${randomUUID()}.${ext}`;
     const uploadDir = path.join(process.cwd(), "public", "uploads");
 
     await mkdir(uploadDir, { recursive: true });
@@ -36,7 +48,7 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
 
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {
-    console.error(error);
+    console.error("Photo upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }
