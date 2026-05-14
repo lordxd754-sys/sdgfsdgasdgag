@@ -1,24 +1,22 @@
-const MODEL = "gemini-2.0-flash";
+import Anthropic from "@anthropic-ai/sdk";
+
+const MODEL = "claude-sonnet-4-5";
+
+let _client: Anthropic | null = null;
+function getClient() {
+  if (!_client) _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  return _client;
+}
 
 export async function aiComplete(prompt: string, maxTokens = 1024): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  const res = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${apiKey}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: { maxOutputTokens: maxTokens },
-      }),
-    }
-  );
+  const client = getClient();
+  const message = await client.messages.create({
+    model: MODEL,
+    max_tokens: maxTokens,
+    messages: [{ role: "user", content: prompt }],
+  });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Gemini API error ${res.status}: ${err}`);
-  }
-
-  const data = await res.json();
-  return data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ?? "";
+  const block = message.content[0];
+  if (block.type !== "text") throw new Error("Unexpected response type from Claude");
+  return block.text.trim();
 }
