@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function POST(req: NextRequest) {
   try {
@@ -20,9 +20,7 @@ export async function POST(req: NextRequest) {
       rawData = text;
     }
 
-    await prisma.formResponse.create({
-      data: { rawData, status: "novo" },
-    });
+    await supabase.from("FormResponse").insert({ rawData, status: "novo" });
 
     return NextResponse.json({ ok: true });
   } catch (error) {

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { AppLayout } from "@/components/layout/app-layout";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { StudentForm } from "../student-form";
 
 export const dynamic = "force-dynamic";
@@ -10,18 +10,22 @@ export default async function NovoAlunoPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const [formCount, overdueCount] = await Promise.all([
-    prisma.formResponse.count({ where: { status: "novo" } }),
-    prisma.student.count({
-      where: {
-        status: "ativo",
-        OR: [
-          { lastContactAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-          { lastContactAt: null, createdAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-        ],
-      },
-    }),
+  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [formCountResult, overdueCountResult] = await Promise.all([
+    supabase
+      .from("FormResponse")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "novo"),
+    supabase
+      .from("Student")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativo")
+      .or(`lastContactAt.lt.${cutoff},and(lastContactAt.is.null,createdAt.lt.${cutoff})`),
   ]);
+
+  const formCount = formCountResult.count ?? 0;
+  const overdueCount = overdueCountResult.count ?? 0;
 
   return (
     <AppLayout formCount={formCount} overdueCount={overdueCount}>

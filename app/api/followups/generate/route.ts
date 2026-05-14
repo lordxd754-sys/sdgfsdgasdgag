@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { aiComplete } from "@/lib/ai";
 import { daysSince } from "@/lib/utils";
 
@@ -10,18 +10,35 @@ export async function POST(req: NextRequest) {
 
   const { studentId } = await req.json();
 
-  const [student, settings] = await Promise.all([
-    prisma.student.findUnique({
-      where: { id: studentId },
-      include: {
-        workouts: { orderBy: { createdAt: "desc" }, take: 1 },
-        followUps: { orderBy: { sentAt: "desc" }, take: 3 },
-      },
-    }),
-    prisma.settings.findFirst(),
+  const [studentResult, settingsResult] = await Promise.all([
+    supabase
+      .from("Student")
+      .select("*, Workout(*), FollowUp(*)")
+      .eq("id", studentId)
+      .single(),
+    supabase.from("Settings").select("*").limit(1).maybeSingle(),
   ]);
 
-  if (!student) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  if (!studentResult.data) return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  const raw = studentResult.data as any;
+  const student = {
+    ...raw,
+    workouts: raw.Workout
+      ? [...raw.Workout].sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ).slice(0, 1)
+      : [],
+    followUps: raw.FollowUp
+      ? [...raw.FollowUp].sort(
+          (a: any, b: any) =>
+            new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+        ).slice(0, 3)
+      : [],
+  };
+
+  const settings = settingsResult.data;
 
   const template =
     settings?.followUpTemplate ??

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { aiComplete } from "@/lib/ai";
 
 export async function POST(_req: NextRequest, { params }: { params: { id: string } }) {
@@ -9,15 +9,17 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
 
   const { id } = await Promise.resolve(params);
 
-  const workout = await prisma.workout.findUnique({
-    where: { id },
-    include: { student: true },
-  });
-  if (!workout) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const { data: workoutRaw } = await supabase
+    .from("Workout")
+    .select("*, Student(*)")
+    .eq("id", id)
+    .single();
 
-  const settings = await prisma.settings.findFirst();
+  if (!workoutRaw) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
-  const student = workout.student;
+  const { data: settings } = await supabase.from("Settings").select("*").limit(1).maybeSingle();
+
+  const student = (workoutRaw as any).Student;
   const prompt = `Você é um personal trainer especializado com 10 anos de experiência em consultoria online.
 Analise os dados abaixo e gere um plano de treino completo e detalhado.
 
@@ -31,7 +33,7 @@ Equipamentos disponíveis: ${student.equipment ?? "Não especificado"}
 Observações: ${student.notes ?? "Nenhuma"}
 
 PROTOCOLO DO PERSONAL:
-${settings?.workoutPreferences ?? "Seguir boas práticas gerais de treinamento."}
+${(settings as any)?.workoutPreferences ?? "Seguir boas práticas gerais de treinamento."}
 
 Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
 {
@@ -61,39 +63,52 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
 
     const workoutData = JSON.parse(jsonMatch[0]);
 
-    await prisma.workoutSession.deleteMany({ where: { workoutId: id } });
+    // Delete existing sessions (exercises are cascade deleted)
+    await supabase.from("WorkoutSession").delete().eq("workoutId", id);
 
-    const updated = await prisma.workout.update({
-      where: { id },
-      data: {
+    // Update the workout title and content
+    const { data: updatedWorkout } = await supabase
+      .from("Workout")
+      .update({
         title: workoutData.title,
         content: JSON.stringify(workoutData),
-        sessions: {
-          create: workoutData.sessions.map((s: any) => ({
-            name: s.name,
-            order: s.order,
-            exercises: {
-              create: s.exercises.map((ex: any) => ({
-                name: ex.name,
-                sets: ex.sets,
-                reps: String(ex.reps),
-                rest: ex.rest ?? 60,
-                notes: ex.notes || null,
-                order: ex.order,
-              })),
-            },
-          })),
-        },
-      },
-      include: {
-        sessions: {
-          orderBy: { order: "asc" },
-          include: { exercises: { orderBy: { order: "asc" } } },
-        },
-      },
-    });
+      })
+      .eq("id", id)
+      .select()
+      .single();
 
-    return NextResponse.json(updated);
+    // Insert sessions and exercises sequentially
+    const sessions: any[] = [];
+    for (const s of workoutData.sessions) {
+      const { data: ws } = await supabase
+        .from("WorkoutSession")
+        .insert({ workoutId: id, name: s.name, order: s.order })
+        .select()
+        .single();
+
+      if (ws) {
+        const exercises: any[] = [];
+        for (const ex of s.exercises) {
+          const { data: exercise } = await supabase
+            .from("Exercise")
+            .insert({
+              sessionId: (ws as any).id,
+              name: ex.name,
+              sets: ex.sets,
+              reps: String(ex.reps),
+              rest: ex.rest ?? 60,
+              notes: ex.notes || null,
+              order: ex.order,
+            })
+            .select()
+            .single();
+          if (exercise) exercises.push(exercise);
+        }
+        sessions.push({ ...(ws as any), exercises });
+      }
+    }
+
+    return NextResponse.json({ ...(updatedWorkout as any), sessions });
   } catch (e) {
     console.error("Generate error:", e);
     return NextResponse.json({ error: "Erro ao gerar treino" }, { status: 500 });

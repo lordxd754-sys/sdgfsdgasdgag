@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function GET() {
   const session = await auth();
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const settings = await prisma.settings.findFirst();
+  const { data: settings } = await supabase.from("Settings").select("*").limit(1).maybeSingle();
   return NextResponse.json(settings ?? {});
 }
 
@@ -15,7 +15,7 @@ export async function PUT(req: NextRequest) {
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const existing = await prisma.settings.findFirst();
+  const { data: existing } = await supabase.from("Settings").select("id").limit(1).maybeSingle();
 
   const data = {
     jotformSecret: body.jotformSecret ?? null,
@@ -33,9 +33,19 @@ export async function PUT(req: NextRequest) {
     workoutPreferences: body.workoutPreferences ?? null,
   };
 
-  const settings = existing
-    ? await prisma.settings.update({ where: { id: existing.id }, data })
-    : await prisma.settings.create({ data });
+  let settings: any;
+  if (existing) {
+    const { data: updated }: any = await supabase
+      .from("Settings")
+      .update(data)
+      .eq("id", existing.id)
+      .select()
+      .single();
+    settings = updated;
+  } else {
+    const { data: created }: any = await supabase.from("Settings").insert(data).select().single();
+    settings = created;
+  }
 
   return NextResponse.json(settings);
 }

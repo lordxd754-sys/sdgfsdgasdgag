@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,65 +15,84 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
+  const cutoff15 = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff12 = new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString();
+
   const [
-    totalActive,
-    noWorkout,
-    overdueContact,
-    newForms,
-    upcomingFollowUps,
-    needsAttention,
+    totalActiveResult,
+    overdueContactResult,
+    newFormsResult,
+    upcomingFollowUpsResult,
+    needsAttentionRaw,
   ] = await Promise.all([
-    prisma.student.count({ where: { status: "ativo" } }),
+    supabase
+      .from("Student")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativo"),
 
-    prisma.student.count({
-      where: {
-        status: "ativo",
-        workouts: { none: {} },
-      },
-    }),
+    supabase
+      .from("Student")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativo")
+      .or(`lastContactAt.lt.${cutoff15},and(lastContactAt.is.null,createdAt.lt.${cutoff15})`),
 
-    prisma.student.count({
-      where: {
-        status: "ativo",
-        OR: [
-          { lastContactAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-          { lastContactAt: null, createdAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-        ],
-      },
-    }),
+    supabase
+      .from("FormResponse")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "novo"),
 
-    prisma.formResponse.count({ where: { status: "novo" } }),
+    supabase
+      .from("Student")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativo")
+      .gte("lastContactAt", cutoff15)
+      .lt("lastContactAt", cutoff12),
 
-    prisma.student.count({
-      where: {
-        status: "ativo",
-        OR: [
-          {
-            lastContactAt: {
-              gte: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-              lt: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000),
-            },
-          },
-        ],
-      },
-    }),
-
-    prisma.student.findMany({
-      where: {
-        status: "ativo",
-        OR: [
-          { workouts: { none: {} } },
-          { lastContactAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-          { lastContactAt: null, createdAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-        ],
-      },
-      include: {
-        workouts: { orderBy: { createdAt: "desc" }, take: 1 },
-      },
-      orderBy: { lastContactAt: "asc" },
-      take: 10,
-    }),
+    supabase
+      .from("Student")
+      .select("*, Workout(*)")
+      .eq("status", "ativo")
+      .order("lastContactAt", { ascending: true })
+      .limit(10),
   ]);
+
+  const totalActive = totalActiveResult.count ?? 0;
+  const overdueContact = overdueContactResult.count ?? 0;
+  const newForms = newFormsResult.count ?? 0;
+  const upcomingFollowUps = upcomingFollowUpsResult.count ?? 0;
+
+  // "noWorkout" requires checking students with no workouts — fetch all active students with their workouts and count those without
+  const { data: allActiveWithWorkouts } = await supabase
+    .from("Student")
+    .select("id, Workout(id)")
+    .eq("status", "ativo");
+
+  const noWorkout = (allActiveWithWorkouts ?? []).filter(
+    (s: any) => !s.Workout || s.Workout.length === 0
+  ).length;
+
+  // Build needs attention list: students without workouts OR overdue contact
+  const needsAttentionAll = (needsAttentionRaw.data ?? []).map((s: any) => ({
+    ...s,
+    workouts: s.Workout
+      ? [...s.Workout].sort(
+          (a: any, b: any) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ).slice(0, 1)
+      : [],
+  }));
+
+  // Filter: no workout OR overdue contact
+  const cutoff15ms = Date.now() - 15 * 24 * 60 * 60 * 1000;
+  const needsAttention = needsAttentionAll.filter((s: any) => {
+    const hasNoWorkout = s.workouts.length === 0;
+    const lastContact = s.lastContactAt ? new Date(s.lastContactAt).getTime() : null;
+    const createdAt = new Date(s.createdAt).getTime();
+    const isOverdue =
+      (lastContact !== null && lastContact < cutoff15ms) ||
+      (lastContact === null && createdAt < cutoff15ms);
+    return hasNoWorkout || isOverdue;
+  });
 
   const metrics = [
     {

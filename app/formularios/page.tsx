@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { AppLayout } from "@/components/layout/app-layout";
 import { FormList } from "./form-list";
 
@@ -10,19 +10,28 @@ export default async function FormulariosPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const [forms, formCount, overdueCount] = await Promise.all([
-    prisma.formResponse.findMany({ orderBy: { receivedAt: "desc" }, take: 100 }),
-    prisma.formResponse.count({ where: { status: "novo" } }),
-    prisma.student.count({
-      where: {
-        status: "ativo",
-        OR: [
-          { lastContactAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-          { lastContactAt: null, createdAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-        ],
-      },
-    }),
+  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+
+  const [formsResult, formCountResult, overdueCountResult] = await Promise.all([
+    supabase
+      .from("FormResponse")
+      .select("*")
+      .order("receivedAt", { ascending: false })
+      .limit(100),
+    supabase
+      .from("FormResponse")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "novo"),
+    supabase
+      .from("Student")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativo")
+      .or(`lastContactAt.lt.${cutoff},and(lastContactAt.is.null,createdAt.lt.${cutoff})`),
   ]);
+
+  const forms = formsResult.data ?? [];
+  const formCount = formCountResult.count ?? 0;
+  const overdueCount = overdueCountResult.count ?? 0;
 
   return (
     <AppLayout formCount={formCount} overdueCount={overdueCount}>

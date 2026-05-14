@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
 
@@ -28,9 +28,11 @@ export async function POST(req: NextRequest, { params }: { params: { id: string 
     await writeFile(path.join(uploadDir, filename), buffer);
 
     const url = `/uploads/${filename}`;
-    const photo = await prisma.photo.create({
-      data: { studentId: id, url, angle },
-    });
+    const { data: photo } = await supabase
+      .from("Photo")
+      .insert({ studentId: id, url, angle })
+      .select()
+      .single();
 
     return NextResponse.json(photo, { status: 201 });
   } catch (error) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
   const session = await auth();
@@ -9,13 +9,16 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   const { id } = await Promise.resolve(params);
   const body = await req.json();
 
-  const form = await prisma.formResponse.update({
-    where: { id },
-    data: {
-      ...(body.status ? { status: body.status } : {}),
-      ...(body.studentId ? { studentId: body.studentId } : {}),
-    },
-  });
+  const updateData: Record<string, any> = {};
+  if (body.status) updateData.status = body.status;
+  if (body.studentId) updateData.studentId = body.studentId;
+
+  const { data: form } = await supabase
+    .from("FormResponse")
+    .update(updateData)
+    .eq("id", id)
+    .select()
+    .single();
 
   return NextResponse.json(form);
 }

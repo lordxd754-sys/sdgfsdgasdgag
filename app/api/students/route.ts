@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -12,22 +12,35 @@ export async function GET(req: NextRequest) {
   const level = searchParams.get("level") ?? "";
   const page = parseInt(searchParams.get("page") ?? "1");
   const perPage = parseInt(searchParams.get("perPage") ?? "20");
+  const skip = (page - 1) * perPage;
 
-  const where = {
-    ...(q ? { OR: [{ name: { contains: q } }, { email: { contains: q } }] } : {}),
-    ...(status ? { status } : {}),
-    ...(level ? { level } : {}),
-  };
+  let studentsQuery = supabase
+    .from("Student")
+    .select("*")
+    .order("createdAt", { ascending: false })
+    .range(skip, skip + perPage - 1);
 
-  const [students, total] = await Promise.all([
-    prisma.student.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      skip: (page - 1) * perPage,
-      take: perPage,
-    }),
-    prisma.student.count({ where }),
-  ]);
+  let countQuery = supabase
+    .from("Student")
+    .select("*", { count: "exact", head: true });
+
+  if (q) {
+    studentsQuery = studentsQuery.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+    countQuery = countQuery.or(`name.ilike.%${q}%,email.ilike.%${q}%`);
+  }
+  if (status) {
+    studentsQuery = studentsQuery.eq("status", status);
+    countQuery = countQuery.eq("status", status);
+  }
+  if (level) {
+    studentsQuery = studentsQuery.eq("level", level);
+    countQuery = countQuery.eq("level", level);
+  }
+
+  const [studentsResult, totalResult] = await Promise.all([studentsQuery, countQuery]);
+
+  const students = studentsResult.data ?? [];
+  const total = totalResult.count ?? 0;
 
   return NextResponse.json({ students, total, page, perPage });
 }
@@ -40,12 +53,13 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const { formId, ...data } = body;
 
-    const student = await prisma.student.create({
-      data: {
+    const { data: student, error } = await supabase
+      .from("Student")
+      .insert({
         name: data.name,
         email: data.email,
         phone: data.phone || null,
-        birthdate: data.birthdate ? new Date(data.birthdate) : null,
+        birthdate: data.birthdate ? new Date(data.birthdate).toISOString() : null,
         city: data.city || null,
         goal: data.goal || null,
         level: data.level ?? "iniciante",
@@ -56,21 +70,26 @@ export async function POST(req: NextRequest) {
         notes: data.notes || null,
         status: data.status ?? "ativo",
         mfitId: data.mfitId || null,
-      },
-    });
+      })
+      .select()
+      .single();
+
+    if (error) {
+      if (error.code === "23505") {
+        return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
+      }
+      return NextResponse.json({ error: "Erro ao criar aluno" }, { status: 500 });
+    }
 
     if (formId) {
-      await prisma.formResponse.update({
-        where: { id: formId },
-        data: { status: "processado", studentId: student.id },
-      });
+      await supabase
+        .from("FormResponse")
+        .update({ status: "processado", studentId: (student as any).id })
+        .eq("id", formId);
     }
 
     return NextResponse.json(student, { status: 201 });
   } catch (error: any) {
-    if (error?.code === "P2002") {
-      return NextResponse.json({ error: "E-mail já cadastrado" }, { status: 409 });
-    }
     return NextResponse.json({ error: "Erro ao criar aluno" }, { status: 500 });
   }
 }

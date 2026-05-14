@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import nodemailer from "nodemailer";
 
 export async function POST(req: NextRequest, { params }: { params: { type: string } }) {
@@ -8,7 +8,7 @@ export async function POST(req: NextRequest, { params }: { params: { type: strin
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { type } = await Promise.resolve(params);
-  const settings = await prisma.settings.findFirst();
+  const { data: settings } = await supabase.from("Settings").select("*").limit(1).maybeSingle() as any;
 
   if (type === "smtp") {
     if (!settings?.smtpHost || !settings?.smtpUser) {

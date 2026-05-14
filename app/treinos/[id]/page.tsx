@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
-import { prisma } from "@/lib/prisma";
+import { supabase } from "@/lib/supabase";
 import { AppLayout } from "@/components/layout/app-layout";
 import { WorkoutEditor } from "./workout-editor";
 
@@ -11,31 +11,57 @@ export default async function TreinoPage({ params }: { params: { id: string } })
   if (!session) redirect("/login");
 
   const { id } = await Promise.resolve(params);
+  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
 
-  const [workout, formCount, overdueCount] = await Promise.all([
-    prisma.workout.findUnique({
-      where: { id },
-      include: {
-        student: { include: { photos: { orderBy: { takenAt: "desc" }, take: 4 } } },
-        sessions: {
-          orderBy: { order: "asc" },
-          include: { exercises: { orderBy: { order: "asc" } } },
-        },
-      },
-    }),
-    prisma.formResponse.count({ where: { status: "novo" } }),
-    prisma.student.count({
-      where: {
-        status: "ativo",
-        OR: [
-          { lastContactAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-          { lastContactAt: null, createdAt: { lt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000) } },
-        ],
-      },
-    }),
+  const [workoutResult, formCountResult, overdueCountResult] = await Promise.all([
+    supabase
+      .from("Workout")
+      .select("*, Student(*, Photo(*)), WorkoutSession(*, Exercise(*))")
+      .eq("id", id)
+      .single(),
+    supabase
+      .from("FormResponse")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "novo"),
+    supabase
+      .from("Student")
+      .select("*", { count: "exact", head: true })
+      .eq("status", "ativo")
+      .or(`lastContactAt.lt.${cutoff},and(lastContactAt.is.null,createdAt.lt.${cutoff})`),
   ]);
 
-  if (!workout) notFound();
+  if (!workoutResult.data) notFound();
+
+  const raw = workoutResult.data as any;
+  const workout = {
+    ...raw,
+    student: raw.Student
+      ? {
+          ...raw.Student,
+          photos: raw.Student.Photo
+            ? [...raw.Student.Photo]
+                .sort(
+                  (a: any, b: any) =>
+                    new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime()
+                )
+                .slice(0, 4)
+            : [],
+        }
+      : null,
+    sessions: raw.WorkoutSession
+      ? [...raw.WorkoutSession]
+          .sort((a: any, b: any) => a.order - b.order)
+          .map((s: any) => ({
+            ...s,
+            exercises: s.Exercise
+              ? [...s.Exercise].sort((a: any, b: any) => a.order - b.order)
+              : [],
+          }))
+      : [],
+  };
+
+  const formCount = formCountResult.count ?? 0;
+  const overdueCount = overdueCountResult.count ?? 0;
 
   return (
     <AppLayout formCount={formCount} overdueCount={overdueCount}>
