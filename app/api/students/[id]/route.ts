@@ -65,6 +65,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         notes: body.notes || null,
         status: body.status ?? "ativo",
         mfitId: body.mfitId || null,
+        updatedAt: new Date().toISOString(),
       })
       .eq("id", id)
       .select()

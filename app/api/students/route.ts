@@ -52,6 +52,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { formId, ...data } = body;
+    const now = new Date().toISOString();
 
     const { data: student, error } = await supabase
       .from("Student")
@@ -71,6 +72,7 @@ export async function POST(req: NextRequest) {
         notes: data.notes || null,
         status: data.status ?? "ativo",
         mfitId: data.mfitId || null,
+        updatedAt: now,
       })
       .select()
       .single();
