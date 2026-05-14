@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
 
     const { error } = await supabase
       .from("FormResponse")
-      .insert({ rawData, status: "novo" });
+      .insert({ id: crypto.randomUUID(), rawData, status: "novo" });
 
     if (error) {
       console.error("Supabase insert error:", error);
