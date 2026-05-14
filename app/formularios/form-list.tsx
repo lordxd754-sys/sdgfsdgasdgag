@@ -20,18 +20,53 @@ interface FormResponse {
   receivedAt: Date;
 }
 
+function flattenJotformField(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return val.trim();
+  if (typeof val === "object") {
+    // Jotform name fields: { first: "João", last: "Silva" }
+    const v = val as Record<string, string>;
+    if (v.first || v.last) return `${v.first ?? ""} ${v.last ?? ""}`.trim();
+    // Jotform address fields: { addr_line1, city, state, ... }
+    return Object.values(v).filter(Boolean).join(", ");
+  }
+  return String(val);
+}
+
 function extractFromRaw(rawData: string) {
   try {
     const data = JSON.parse(rawData);
-    const name =
-      data.q3_nome || data.name || data.nome ||
-      data["q3_nome_completo"] || data["Nome"] || "";
-    const email =
-      data.q4_email || data.email || data.Email ||
-      data["q4_emailAddress"] || "";
-    const phone =
-      data.q5_phone || data.phone || data.telefone || data.whatsapp || "";
-    const goal = data.q6_objetivo || data.objetivo || data.goal || "";
+
+    // Scan all keys for name-like fields (handles any q-number prefix)
+    const findField = (...keys: string[]) => {
+      for (const k of keys) {
+        if (data[k] !== undefined && data[k] !== "") return flattenJotformField(data[k]);
+      }
+      // Fuzzy match: find any key that contains one of the key patterns
+      for (const k of keys) {
+        const match = Object.keys(data).find(
+          (dk) => dk.toLowerCase().includes(k.toLowerCase())
+        );
+        if (match && data[match]) return flattenJotformField(data[match]);
+      }
+      return "";
+    };
+
+    const name = findField(
+      "q3_nome", "q3_name", "nome", "name", "q3_nome_completo",
+      "nome_completo", "fullName", "full_name", "Nome"
+    );
+    const email = findField(
+      "q4_email", "email", "Email", "q4_emailAddress", "emailAddress"
+    );
+    const phone = findField(
+      "q5_phone", "phone", "telefone", "whatsapp", "celular",
+      "q5_phoneNumber", "phoneNumber"
+    );
+    const goal = findField(
+      "q6_objetivo", "objetivo", "goal", "q6_goal", "meta", "objetivo_principal"
+    );
+
     return { name, email, phone, goal };
   } catch {
     return { name: "", email: "", phone: "", goal: "" };

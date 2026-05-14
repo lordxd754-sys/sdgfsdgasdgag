@@ -21,6 +21,7 @@ export async function PUT(req: NextRequest) {
     jotformSecret: body.jotformSecret ?? null,
     zapiToken: body.zapiToken ?? null,
     zapiInstance: body.zapiInstance ?? null,
+    zapiClientToken: body.zapiClientToken ?? null,
     zapiPhone: body.zapiPhone ?? null,
     smtpHost: body.smtpHost ?? null,
     smtpPort: body.smtpPort ? parseInt(String(body.smtpPort)) : null,

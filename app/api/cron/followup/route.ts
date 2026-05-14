@@ -75,14 +75,18 @@ Retorne APENAS o texto da mensagem.`;
         } else if (settings.zapiToken && settings.zapiInstance && student.phone) {
           channel = "whatsapp";
           try {
-            await fetch(
+            const phone = String(student.phone).replace(/\D/g, "");
+            const headers: Record<string, string> = { "Content-Type": "application/json" };
+            if (settings.zapiClientToken) headers["Client-Token"] = settings.zapiClientToken;
+            const zapiRes = await fetch(
               `https://api.z-api.io/instances/${settings.zapiInstance}/token/${settings.zapiToken}/send-text`,
               {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ phone: student.phone, message }),
+                headers,
+                body: JSON.stringify({ phone, message }),
               }
             );
+            if (!zapiRes.ok) sendStatus = "falhou";
           } catch {
             sendStatus = "falhou";
           }

@@ -37,16 +37,24 @@ export async function POST(req: NextRequest) {
         text: message,
       });
     } else if (channel === "whatsapp" && settings?.zapiToken && settings?.zapiInstance) {
-      const phone = student.phone ?? settings.zapiPhone;
-      if (phone) {
-        await fetch(
+      const rawPhone = student.phone ?? settings.zapiPhone;
+      if (rawPhone) {
+        const phone = String(rawPhone).replace(/\D/g, "");
+        const headers: Record<string, string> = { "Content-Type": "application/json" };
+        if (settings.zapiClientToken) headers["Client-Token"] = settings.zapiClientToken;
+        const zapiRes = await fetch(
           `https://api.z-api.io/instances/${settings.zapiInstance}/token/${settings.zapiToken}/send-text`,
           {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers,
             body: JSON.stringify({ phone, message }),
           }
         );
+        if (!zapiRes.ok) {
+          const errText = await zapiRes.text();
+          console.error("Zapi send error:", zapiRes.status, errText);
+          throw new Error(`Zapi error ${zapiRes.status}: ${errText}`);
+        }
       }
     }
   } catch (e) {

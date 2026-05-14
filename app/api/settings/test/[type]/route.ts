@@ -33,15 +33,21 @@ export async function POST(req: NextRequest, { params }: { params: { type: strin
       return NextResponse.json({ success: false, error: "Zapi não configurado" });
     }
     try {
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (settings.zapiClientToken) headers["Client-Token"] = settings.zapiClientToken;
+
       const res = await fetch(
         `https://api.z-api.io/instances/${settings.zapiInstance}/token/${settings.zapiToken}/status`,
-        { headers: { "Content-Type": "application/json" } }
+        { headers }
       );
+      if (!res.ok) {
+        return NextResponse.json({ success: false, error: `HTTP ${res.status}` });
+      }
       const data = await res.json();
       if (data.connected) {
         return NextResponse.json({ success: true });
       }
-      return NextResponse.json({ success: false, error: "Não conectado" });
+      return NextResponse.json({ success: false, error: data.message ?? "Não conectado" });
     } catch (e: any) {
       return NextResponse.json({ success: false, error: e.message });
     }

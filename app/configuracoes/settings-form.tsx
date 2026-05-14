@@ -13,6 +13,7 @@ type Settings = {
   jotformSecret?: string | null;
   zapiToken?: string | null;
   zapiInstance?: string | null;
+  zapiClientToken?: string | null;
   zapiPhone?: string | null;
   smtpHost?: string | null;
   smtpPort?: number | null;
@@ -115,12 +116,16 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
                   <Input value={form.zapiToken ?? ""} onChange={(e) => set("zapiToken", e.target.value)} type="password" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label>Instance</Label>
+                  <Label>Instance ID</Label>
                   <Input value={form.zapiInstance ?? ""} onChange={(e) => set("zapiInstance", e.target.value)} />
                 </div>
                 <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Client Token</Label>
+                  <Input value={form.zapiClientToken ?? ""} onChange={(e) => set("zapiClientToken", e.target.value)} type="password" placeholder="Security Client Token do painel Zapi" />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
                   <Label>Telefone padrão</Label>
-                  <Input value={form.zapiPhone ?? ""} onChange={(e) => set("zapiPhone", e.target.value)} placeholder="+5511999999999" />
+                  <Input value={form.zapiPhone ?? ""} onChange={(e) => set("zapiPhone", e.target.value)} placeholder="5511999999999 (sem + ou espaços)" />
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => test("zapi")} disabled={testing === "zapi"}>
