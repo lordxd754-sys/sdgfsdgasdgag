@@ -11,7 +11,7 @@ export default async function AlunoPage({ params }: { params: { id: string } }) 
   if (!session) redirect("/login");
 
   const { id } = await Promise.resolve(params);
-  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = cutoff15Days();
 
   const [studentResult, formCountResult, overdueCountResult] = await Promise.all([
     supabase

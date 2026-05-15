@@ -10,7 +10,7 @@ export default async function ConfiguracoesPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = cutoff15Days();
 
   const [settingsResult, formCountResult, overdueCountResult] = await Promise.all([
     supabase.from("Settings").select("*").limit(1).maybeSingle(),
@@ -32,8 +32,8 @@ export default async function ConfiguracoesPage() {
   return (
     <AppLayout formCount={formCount} overdueCount={overdueCount}>
       <div className="mb-8">
-        <h1 className="font-syne text-3xl font-bold text-white">Configurações</h1>
-        <p className="mt-1 text-sm text-gray-500">Integrações, templates e preferências</p>
+        <h1 className="text-headline-lg font-bold text-on-surface">Configurações</h1>
+        <p className="mt-1 text-label-md text-on-surface-variant">Integrações, templates e preferências</p>
       </div>
       <SettingsForm settings={settings as any} />
     </AppLayout>

@@ -10,7 +10,7 @@ export default async function FormulariosPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = cutoff15Days();
 
   const [formsResult, formCountResult, overdueCountResult] = await Promise.all([
     supabase

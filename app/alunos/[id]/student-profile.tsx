@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -321,7 +322,7 @@ export function StudentProfile({ student }: { student: FullStudent }) {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {student.photos.map((photo) => (
                 <div key={photo.id} className="rounded-xl overflow-hidden border border-outline-variant bg-surface-container">
-                  <img src={photo.url} alt={photo.angle ?? "Foto"} className="w-full aspect-[3/4] object-cover" />
+                  <Image src={photo.url} alt={photo.angle ?? "Foto"} width={300} height={400} className="w-full aspect-[3/4] object-cover" />
                   <div className="px-2 py-1.5">
                     <p className="text-xs text-on-surface-variant">{photo.angle ?? "Foto"}</p>
                     <p className="text-xs text-on-surface-variant">{formatDate(photo.takenAt)}</p>

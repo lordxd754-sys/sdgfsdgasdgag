@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { formatDate, daysSince } from "@/lib/utils";
+import { formatDate, daysSince, cutoff15Days } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   const session = await auth();
   if (!session) redirect("/login");
 
-  const cutoff15 = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff15 = cutoff15Days();
   const cutoff12 = new Date(Date.now() - 12 * 24 * 60 * 60 * 1000).toISOString();
 
   const [
@@ -23,6 +23,7 @@ export default async function DashboardPage() {
     newFormsResult,
     upcomingFollowUpsResult,
     needsAttentionRaw,
+    allActiveWithWorkoutsResult,
   ] = await Promise.all([
     supabase
       .from("Student")
@@ -53,6 +54,11 @@ export default async function DashboardPage() {
       .eq("status", "ativo")
       .order("lastContactAt", { ascending: true })
       .limit(10),
+
+    supabase
+      .from("Student")
+      .select("id, Workout(id)")
+      .eq("status", "ativo"),
   ]);
 
   const totalActive = totalActiveResult.count ?? 0;
@@ -60,17 +66,10 @@ export default async function DashboardPage() {
   const newForms = newFormsResult.count ?? 0;
   const upcomingFollowUps = upcomingFollowUpsResult.count ?? 0;
 
-  // "noWorkout" requires checking students with no workouts — fetch all active students with their workouts and count those without
-  const { data: allActiveWithWorkouts } = await supabase
-    .from("Student")
-    .select("id, Workout(id)")
-    .eq("status", "ativo");
-
-  const noWorkout = (allActiveWithWorkouts ?? []).filter(
+  const noWorkout = (allActiveWithWorkoutsResult.data ?? []).filter(
     (s: any) => !s.Workout || s.Workout.length === 0
   ).length;
 
-  // Build needs attention list: students without workouts OR overdue contact
   const needsAttentionAll = (needsAttentionRaw.data ?? []).map((s: any) => ({
     ...s,
     workouts: s.Workout
@@ -81,7 +80,6 @@ export default async function DashboardPage() {
       : [],
   }));
 
-  // Filter: no workout OR overdue contact
   const cutoff15ms = Date.now() - 15 * 24 * 60 * 60 * 1000;
   const needsAttention = needsAttentionAll.filter((s: any) => {
     const hasNoWorkout = s.workouts.length === 0;

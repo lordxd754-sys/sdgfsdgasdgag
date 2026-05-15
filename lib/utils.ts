@@ -5,6 +5,10 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
+export function cutoff15Days(): string {
+  return new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+}
+
 export function formatDate(date: Date | string | null | undefined): string {
   if (!date) return "—";
   return new Date(date).toLocaleDateString("pt-BR", {

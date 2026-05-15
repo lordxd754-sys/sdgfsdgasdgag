@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { formatDate, daysSince, levelLabel, statusLabel } from "@/lib/utils";
+import { formatDate, daysSince, levelLabel, statusLabel, cutoff15Days } from "@/lib/utils";
 import { StudentFilters } from "./student-filters";
 
 export const dynamic = "force-dynamic";
@@ -19,14 +19,13 @@ export default async function AlunosPage({
   const session = await auth();
   if (!session) redirect("/login");
 
-  const params = await Promise.resolve(searchParams);
-  const q = params.q ?? "";
-  const status = params.status ?? "";
-  const level = params.level ?? "";
-  const page = parseInt(params.page ?? "1");
+  const q = searchParams.q ?? "";
+  const status = searchParams.status ?? "";
+  const level = searchParams.level ?? "";
+  const page = parseInt(searchParams.page ?? "1");
   const perPage = 20;
   const skip = (page - 1) * perPage;
-  const cutoff = new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString();
+  const cutoff = cutoff15Days();
 
   // Build students query
   let studentsQuery = supabase
