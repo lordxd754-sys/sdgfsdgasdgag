@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react";
 import { cn } from "@/lib/utils";
-import { CheckCircle, XCircle, X } from "lucide-react";
 
 interface Toast {
   id: string;
@@ -27,28 +26,26 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-[100] flex flex-col gap-2">
+      <div className="fixed bottom-24 lg:bottom-4 right-4 z-[100] flex flex-col gap-2">
         {toasts.map((t) => (
           <div
             key={t.id}
             className={cn(
-              "flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur-sm text-sm transition-all animate-in slide-in-from-right",
+              "flex items-center gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur-sm text-label-md transition-all",
               t.type === "success"
-                ? "border-green-500/30 bg-green-500/10 text-green-300"
-                : "border-red-500/30 bg-red-500/10 text-red-300"
+                ? "border-primary/30 bg-primary/10 text-primary"
+                : "border-error/30 bg-error/10 text-error"
             )}
           >
-            {t.type === "success" ? (
-              <CheckCircle className="h-4 w-4 shrink-0" />
-            ) : (
-              <XCircle className="h-4 w-4 shrink-0" />
-            )}
+            <span className="material-symbols-outlined text-[18px] shrink-0">
+              {t.type === "success" ? "check_circle" : "error"}
+            </span>
             <span>{t.message}</span>
             <button
               onClick={() => setToasts((prev) => prev.filter((x) => x.id !== t.id))}
               className="ml-2 opacity-60 hover:opacity-100"
             >
-              <X className="h-3 w-3" />
+              <span className="material-symbols-outlined text-[16px]">close</span>
             </button>
           </div>
         ))}

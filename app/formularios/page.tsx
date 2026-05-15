@@ -36,8 +36,8 @@ export default async function FormulariosPage() {
   return (
     <AppLayout formCount={formCount} overdueCount={overdueCount}>
       <div className="mb-8">
-        <h1 className="font-syne text-3xl font-bold text-white">Formulários recebidos</h1>
-        <p className="mt-1 text-sm text-gray-500">Inbox de respostas do Jotform</p>
+        <h1 className="text-headline-lg font-bold text-on-surface">Formulários recebidos</h1>
+        <p className="mt-1 text-label-md text-on-surface-variant">Inbox de respostas do Jotform</p>
       </div>
       <FormList forms={forms as any[]} />
     </AppLayout>

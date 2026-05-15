@@ -47,8 +47,8 @@ export default async function AcompanhamentoPage() {
   return (
     <AppLayout formCount={formCount} overdueCount={overdueCount}>
       <div className="mb-8">
-        <h1 className="font-syne text-3xl font-bold text-white">Acompanhamento</h1>
-        <p className="mt-1 text-sm text-gray-500">Central de mensagens e follow-ups</p>
+        <h1 className="text-headline-lg font-bold text-on-surface">Acompanhamento</h1>
+        <p className="mt-1 text-label-md text-on-surface-variant">Central de mensagens e follow-ups</p>
       </div>
       <FollowUpList students={students as any[]} autoFollowUp={settings?.autoFollowUp ?? false} />
     </AppLayout>

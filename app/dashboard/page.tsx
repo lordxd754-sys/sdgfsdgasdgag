@@ -5,7 +5,6 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Users, Dumbbell, MessageSquare, FileText, Clock, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { formatDate, daysSince } from "@/lib/utils";
 
@@ -95,79 +94,42 @@ export default async function DashboardPage() {
   });
 
   const metrics = [
-    {
-      label: "Alunos ativos",
-      value: totalActive,
-      icon: Users,
-      color: "text-green-400",
-      bg: "bg-green-500/10",
-    },
-    {
-      label: "Sem treino",
-      value: noWorkout,
-      icon: Dumbbell,
-      color: "text-yellow-400",
-      bg: "bg-yellow-500/10",
-    },
-    {
-      label: "Contato vencido",
-      value: overdueContact,
-      icon: MessageSquare,
-      color: "text-red-400",
-      bg: "bg-red-500/10",
-    },
-    {
-      label: "Formulários novos",
-      value: newForms,
-      icon: FileText,
-      color: "text-blue-400",
-      bg: "bg-blue-500/10",
-    },
-    {
-      label: "Próx. acompanhamentos",
-      value: upcomingFollowUps,
-      icon: Clock,
-      color: "text-purple-400",
-      bg: "bg-purple-500/10",
-    },
+    { label: "Alunos Ativos",          value: totalActive,      icon: "group",          color: "text-primary",  bg: "bg-primary/10" },
+    { label: "Sem Treino",             value: noWorkout,        icon: "fitness_center", color: "text-error",    bg: "bg-error/10" },
+    { label: "Contato Vencido",        value: overdueContact,   icon: "event_busy",     color: "text-tertiary", bg: "bg-tertiary/10" },
+    { label: "Formulários Novos",      value: newForms,         icon: "pending_actions",color: "text-primary",  bg: "bg-primary/10" },
+    { label: "Próx. Acompanhamentos",  value: upcomingFollowUps,icon: "access_time",    color: "text-secondary",bg: "bg-secondary/10" },
   ];
 
   return (
     <AppLayout formCount={newForms} overdueCount={overdueContact}>
       <div className="mb-8">
-        <h1 className="font-syne text-3xl font-bold text-white">Dashboard</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Visão geral da sua consultoria
+        <h1 className="text-headline-lg font-bold text-on-surface">Visão Geral</h1>
+        <p className="mt-1 text-label-md text-on-surface-variant">
+          Bem-vindo de volta. Aqui está o que precisa da sua atenção hoje.
         </p>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {metrics.map((m: (typeof metrics)[number]) => {
-          const Icon = m.icon;
-          return (
-            <Card key={m.label} className="relative overflow-hidden">
-              <CardContent>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">
-                      {m.label}
-                    </p>
-                    <p className="mt-2 text-4xl font-bold text-white">{m.value}</p>
-                  </div>
-                  <div className={`rounded-xl p-2.5 ${m.bg}`}>
-                    <Icon className={`h-5 w-5 ${m.color}`} />
-                  </div>
+        {metrics.map((m) => (
+          <Card key={m.label} className="relative overflow-hidden hover:-translate-y-1 transition-transform">
+            <CardContent>
+              <div className="flex justify-between items-start mb-4">
+                <div className={`w-11 h-11 rounded-xl ${m.bg} flex items-center justify-center`}>
+                  <span className={`material-symbols-outlined ${m.color}`}>{m.icon}</span>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              </div>
+              <p className="text-label-sm text-on-surface-variant uppercase tracking-wider">{m.label}</p>
+              <p className="text-headline-lg font-bold text-on-surface mt-1">{m.value}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      <div className="mt-8 flex items-center gap-3">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         <Link href="/formularios">
           <Button variant="outline" size="sm">
-            <FileText className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">description</span>
             Ver formulários
             {newForms > 0 && (
               <Badge variant="default" className="ml-1">{newForms}</Badge>
@@ -176,7 +138,7 @@ export default async function DashboardPage() {
         </Link>
         <Link href="/alunos/novo">
           <Button size="sm">
-            <Users className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">person_add</span>
             Novo aluno
           </Button>
         </Link>
@@ -186,35 +148,31 @@ export default async function DashboardPage() {
         <Card className="mt-8">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-yellow-400" />
+              <span className="material-symbols-outlined text-tertiary">warning</span>
               <CardTitle>Precisam de atenção</CardTitle>
             </div>
           </CardHeader>
           <CardContent>
-            <div className="divide-y divide-[#2a2a2a]">
+            <div className="divide-y divide-outline-variant">
               {needsAttention.map((student: (typeof needsAttention)[number]) => {
                 const hasWorkout = student.workouts.length > 0;
                 const days = daysSince(student.lastContactAt ?? student.createdAt);
                 return (
                   <div key={student.id} className="flex items-center justify-between py-3">
                     <div className="flex items-center gap-3">
-                      <div className="h-8 w-8 rounded-full bg-[#2a2a2a] flex items-center justify-center text-sm font-medium text-gray-300">
+                      <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center text-label-md font-bold text-primary">
                         {student.name.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-white">{student.name}</p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-body-md font-semibold text-on-surface">{student.name}</p>
+                        <p className="text-label-sm text-on-surface-variant">
                           {!hasWorkout ? "Sem treino" : `Último contato: ${formatDate(student.lastContactAt)}`}
                         </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
-                      {!hasWorkout && (
-                        <Badge variant="warning">Sem treino</Badge>
-                      )}
-                      {days > 15 && (
-                        <Badge variant="danger">{days}d sem contato</Badge>
-                      )}
+                      {!hasWorkout && <Badge variant="warning">Sem treino</Badge>}
+                      {days > 15 && <Badge variant="danger">{days}d sem contato</Badge>}
                       <Link href={`/alunos/${student.id}`}>
                         <Button variant="ghost" size="sm">Ver perfil</Button>
                       </Link>

@@ -9,10 +9,6 @@ import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import {
-  ArrowLeft, Edit, Trash2, Camera, Dumbbell, MessageSquare, User,
-  Upload, Loader2, Wand2, Send, Plus, ExternalLink,
-} from "lucide-react";
 import { formatDate, formatDateTime, daysSince, levelLabel, statusLabel } from "@/lib/utils";
 import { StudentForm } from "../student-form";
 
@@ -157,10 +153,10 @@ export function StudentProfile({ student }: { student: FullStudent }) {
   }
 
   const tabs = [
-    { key: "dados", label: "Dados", icon: User },
-    { key: "fotos", label: "Fotos", icon: Camera },
-    { key: "treinos", label: "Treinos", icon: Dumbbell },
-    { key: "acompanhamento", label: "Acompanhamento", icon: MessageSquare },
+    { key: "dados", label: "Dados", icon: "person" },
+    { key: "fotos", label: "Fotos", icon: "photo_camera" },
+    { key: "treinos", label: "Treinos", icon: "fitness_center" },
+    { key: "acompanhamento", label: "Acompanhamento", icon: "chat" },
   ] as const;
 
   if (editing) {
@@ -168,9 +164,9 @@ export function StudentProfile({ student }: { student: FullStudent }) {
       <div>
         <div className="mb-8 flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={() => setEditing(false)}>
-            <ArrowLeft className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
           </Button>
-          <h1 className="font-syne text-2xl font-bold text-white">Editar {student.name}</h1>
+          <h1 className="text-2xl font-bold text-on-surface">Editar {student.name}</h1>
         </div>
         <StudentForm
           studentId={student.id}
@@ -201,45 +197,45 @@ export function StudentProfile({ student }: { student: FullStudent }) {
         <div className="flex items-center gap-3">
           <Link href="/alunos">
             <Button variant="ghost" size="icon">
-              <ArrowLeft className="h-4 w-4" />
+              <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             </Button>
           </Link>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-syne text-2xl font-bold text-white">{student.name}</h1>
+              <h1 className="text-2xl font-bold text-on-surface">{student.name}</h1>
               <Badge
                 variant={student.status === "ativo" ? "success" : student.status === "pausado" ? "warning" : "secondary"}
               >
                 {statusLabel(student.status)}
               </Badge>
             </div>
-            <p className="text-sm text-gray-500">{student.email}</p>
+            <p className="text-sm text-on-surface-variant">{student.email}</p>
           </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
-            <Edit className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">edit</span>
             Editar
           </Button>
           <Button variant="destructive" size="sm" onClick={() => setDeleteModal(true)}>
-            <Trash2 className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">delete</span>
           </Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6 flex gap-1 border-b border-[#2a2a2a]">
-        {tabs.map(({ key, label, icon: Icon }) => (
+      <div className="mb-6 flex gap-1 border-b border-outline-variant">
+        {tabs.map(({ key, label, icon }) => (
           <button
             key={key}
             onClick={() => setTab(key)}
             className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
               tab === key
-                ? "border-green-500 text-green-400"
-                : "border-transparent text-gray-500 hover:text-gray-300"
+                ? "border-primary text-primary"
+                : "border-transparent text-on-surface-variant hover:text-on-surface"
             }`}
           >
-            <Icon className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">{icon}</span>
             {label}
           </button>
         ))}
@@ -260,8 +256,8 @@ export function StudentProfile({ student }: { student: FullStudent }) {
                 ["Último contato", student.lastContactAt ? formatDate(student.lastContactAt) : "Nunca"],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="text-white">{value ?? "—"}</span>
+                  <span className="text-on-surface-variant">{label}</span>
+                  <span className="text-on-surface">{value ?? "—"}</span>
                 </div>
               ))}
             </CardContent>
@@ -276,8 +272,8 @@ export function StudentProfile({ student }: { student: FullStudent }) {
                 ["Duração", `${student.sessionDuration} min`],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="text-white">{value ?? "—"}</span>
+                  <span className="text-on-surface-variant">{label}</span>
+                  <span className="text-on-surface">{value ?? "—"}</span>
                 </div>
               ))}
             </CardContent>
@@ -285,19 +281,19 @@ export function StudentProfile({ student }: { student: FullStudent }) {
           {student.restrictions && (
             <Card>
               <CardHeader><CardTitle>Restrições</CardTitle></CardHeader>
-              <CardContent><p className="text-sm text-gray-300">{student.restrictions}</p></CardContent>
+              <CardContent><p className="text-sm text-on-surface">{student.restrictions}</p></CardContent>
             </Card>
           )}
           {student.equipment && (
             <Card>
               <CardHeader><CardTitle>Equipamentos</CardTitle></CardHeader>
-              <CardContent><p className="text-sm text-gray-300">{student.equipment}</p></CardContent>
+              <CardContent><p className="text-sm text-on-surface">{student.equipment}</p></CardContent>
             </Card>
           )}
           {student.notes && (
             <Card className="sm:col-span-2">
               <CardHeader><CardTitle>Observações</CardTitle></CardHeader>
-              <CardContent><p className="text-sm text-gray-300">{student.notes}</p></CardContent>
+              <CardContent><p className="text-sm text-on-surface">{student.notes}</p></CardContent>
             </Card>
           )}
         </div>
@@ -307,28 +303,28 @@ export function StudentProfile({ student }: { student: FullStudent }) {
       {tab === "fotos" && (
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-syne text-lg font-semibold text-white">Fotos de avaliação</h2>
+            <h2 className="text-lg font-semibold text-on-surface">Fotos de avaliação</h2>
             <label>
               <Button variant="outline" size="sm" disabled={uploadingPhoto} onClick={() => {}}>
-                {uploadingPhoto ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                {uploadingPhoto ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">upload</span>}
                 Enviar foto
               </Button>
               <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} />
             </label>
           </div>
           {student.photos.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#2a2a2a] p-12 text-center">
-              <Camera className="mx-auto h-8 w-8 text-gray-600 mb-3" />
-              <p className="text-sm text-gray-500">Nenhuma foto enviada ainda</p>
+            <div className="rounded-xl border border-dashed border-outline-variant p-12 text-center">
+              <span className="material-symbols-outlined text-[32px] text-on-surface-variant mx-auto mb-3 block">photo_camera</span>
+              <p className="text-sm text-on-surface-variant">Nenhuma foto enviada ainda</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {student.photos.map((photo) => (
-                <div key={photo.id} className="rounded-xl overflow-hidden border border-[#2a2a2a] bg-[#1a1a1a]">
+                <div key={photo.id} className="rounded-xl overflow-hidden border border-outline-variant bg-surface-container">
                   <img src={photo.url} alt={photo.angle ?? "Foto"} className="w-full aspect-[3/4] object-cover" />
                   <div className="px-2 py-1.5">
-                    <p className="text-xs text-gray-400">{photo.angle ?? "Foto"}</p>
-                    <p className="text-xs text-gray-600">{formatDate(photo.takenAt)}</p>
+                    <p className="text-xs text-on-surface-variant">{photo.angle ?? "Foto"}</p>
+                    <p className="text-xs text-on-surface-variant">{formatDate(photo.takenAt)}</p>
                   </div>
                 </div>
               ))}
@@ -341,18 +337,18 @@ export function StudentProfile({ student }: { student: FullStudent }) {
       {tab === "treinos" && (
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-syne text-lg font-semibold text-white">Treinos</h2>
+            <h2 className="text-lg font-semibold text-on-surface">Treinos</h2>
             <Button size="sm" onClick={() => setGenerateModal(true)}>
-              <Wand2 className="h-4 w-4" />
+              <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
               Gerar com IA
             </Button>
           </div>
           {student.workouts.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#2a2a2a] p-12 text-center">
-              <Dumbbell className="mx-auto h-8 w-8 text-gray-600 mb-3" />
-              <p className="text-sm text-gray-500">Nenhum treino gerado ainda</p>
+            <div className="rounded-xl border border-dashed border-outline-variant p-12 text-center">
+              <span className="material-symbols-outlined text-[32px] text-on-surface-variant mx-auto mb-3 block">fitness_center</span>
+              <p className="text-sm text-on-surface-variant">Nenhum treino gerado ainda</p>
               <Button size="sm" className="mt-4" onClick={() => setGenerateModal(true)}>
-                <Wand2 className="h-4 w-4" />
+                <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
                 Gerar primeiro treino
               </Button>
             </div>
@@ -361,8 +357,8 @@ export function StudentProfile({ student }: { student: FullStudent }) {
               {student.workouts.map((workout) => (
                 <Card key={workout.id} className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-white">{workout.title}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{formatDate(workout.createdAt)} · {workout.sessions.length} sessões</p>
+                    <p className="font-medium text-on-surface">{workout.title}</p>
+                    <p className="text-xs text-on-surface-variant mt-0.5">{formatDate(workout.createdAt)} · {workout.sessions.length} sessões</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <Badge
@@ -376,7 +372,7 @@ export function StudentProfile({ student }: { student: FullStudent }) {
                     </Badge>
                     <Link href={`/treinos/${workout.id}`}>
                       <Button variant="ghost" size="sm">
-                        <ExternalLink className="h-4 w-4" />
+                        <span className="material-symbols-outlined text-[18px]">open_in_new</span>
                         Ver
                       </Button>
                     </Link>
@@ -392,16 +388,16 @@ export function StudentProfile({ student }: { student: FullStudent }) {
       {tab === "acompanhamento" && (
         <div>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="font-syne text-lg font-semibold text-white">Histórico de acompanhamento</h2>
+            <h2 className="text-lg font-semibold text-on-surface">Histórico de acompanhamento</h2>
             <Button size="sm" onClick={() => setFollowModal(true)}>
-              <Send className="h-4 w-4" />
+              <span className="material-symbols-outlined text-[18px]">send</span>
               Enviar mensagem
             </Button>
           </div>
           {student.followUps.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#2a2a2a] p-12 text-center">
-              <MessageSquare className="mx-auto h-8 w-8 text-gray-600 mb-3" />
-              <p className="text-sm text-gray-500">Nenhuma mensagem enviada ainda</p>
+            <div className="rounded-xl border border-dashed border-outline-variant p-12 text-center">
+              <span className="material-symbols-outlined text-[32px] text-on-surface-variant mx-auto mb-3 block">chat</span>
+              <p className="text-sm text-on-surface-variant">Nenhuma mensagem enviada ainda</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -409,10 +405,10 @@ export function StudentProfile({ student }: { student: FullStudent }) {
                 <Card key={f.id}>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <p className="text-sm text-gray-200 whitespace-pre-wrap">{f.message}</p>
+                      <p className="text-sm text-on-surface whitespace-pre-wrap">{f.message}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-xs text-gray-500">{formatDateTime(f.sentAt)}</p>
+                      <p className="text-xs text-on-surface-variant">{formatDateTime(f.sentAt)}</p>
                       <Badge variant="secondary" className="mt-1">{f.channel}</Badge>
                       {f.autoGenerated && <Badge variant="outline" className="mt-1 ml-1">IA</Badge>}
                     </div>
@@ -426,13 +422,13 @@ export function StudentProfile({ student }: { student: FullStudent }) {
 
       {/* Delete Modal */}
       <Modal open={deleteModal} onClose={() => setDeleteModal(false)} title="Excluir aluno">
-        <p className="text-sm text-gray-400 mb-6">
-          Tem certeza que deseja excluir <strong className="text-white">{student.name}</strong>? Esta ação não pode ser desfeita.
+        <p className="text-sm text-on-surface-variant mb-6">
+          Tem certeza que deseja excluir <strong className="text-on-surface">{student.name}</strong>? Esta ação não pode ser desfeita.
         </p>
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={() => setDeleteModal(false)}>Cancelar</Button>
           <Button variant="destructive" onClick={handleDelete} disabled={deleting}>
-            {deleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+            {deleting ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">delete</span>}
             Excluir
           </Button>
         </div>
@@ -440,13 +436,13 @@ export function StudentProfile({ student }: { student: FullStudent }) {
 
       {/* Generate Workout Modal */}
       <Modal open={generateModal} onClose={() => setGenerateModal(false)} title="Gerar treino com IA">
-        <p className="text-sm text-gray-400 mb-6">
-          A IA vai analisar o perfil de <strong className="text-white">{student.name}</strong> e gerar um treino personalizado.
+        <p className="text-sm text-on-surface-variant mb-6">
+          A IA vai analisar o perfil de <strong className="text-on-surface">{student.name}</strong> e gerar um treino personalizado.
         </p>
         <div className="flex gap-3 justify-end">
           <Button variant="outline" onClick={() => setGenerateModal(false)}>Cancelar</Button>
           <Button onClick={handleGenerateWorkout} disabled={generating}>
-            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+            {generating ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>}
             {generating ? "Gerando..." : "Gerar treino"}
           </Button>
         </div>
@@ -457,7 +453,7 @@ export function StudentProfile({ student }: { student: FullStudent }) {
         <div className="space-y-4">
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={handleGenerateMessage} disabled={generatingMsg}>
-              {generatingMsg ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+              {generatingMsg ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>}
               Gerar com IA
             </Button>
           </div>
@@ -474,7 +470,7 @@ export function StudentProfile({ student }: { student: FullStudent }) {
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setFollowModal(false)}>Cancelar</Button>
             <Button onClick={handleSendFollow} disabled={sendingFollow || !followMessage.trim()}>
-              {sendingFollow ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              {sendingFollow ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">send</span>}
               Enviar
             </Button>
           </div>

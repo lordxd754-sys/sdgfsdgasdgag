@@ -6,7 +6,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/toast";
-import { Save, Loader2, TestTube } from "lucide-react";
 
 type Settings = {
   id?: string;
@@ -68,7 +67,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
 
   return (
     <div className="max-w-2xl">
-      <div className="mb-6 flex gap-1 border-b border-[#2a2a2a]">
+      <div className="mb-6 flex gap-1 border-b border-outline-variant">
         {tabs.map(({ key, label }) => (
           <button
             key={key}
@@ -76,7 +75,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
             className={`px-4 py-2.5 text-sm font-medium transition-colors border-b-2 -mb-px ${
               tab === key
                 ? "border-green-500 text-green-400"
-                : "border-transparent text-gray-500 hover:text-gray-300"
+                : "border-transparent text-on-surface-variant hover:text-on-surface"
             }`}
           >
             {label}
@@ -98,15 +97,15 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
                   type="password"
                 />
               </div>
-              <div className="rounded-lg bg-[#0f0f0f] p-3 space-y-1">
-                <p className="text-xs text-gray-500">URL do webhook para configurar no Jotform (inclua o secret para validação):</p>
-                <code className="text-xs text-green-400 break-all">
+              <div className="rounded-xl bg-primary/5 border border-primary/20 p-4 space-y-1">
+                <p className="text-label-sm text-on-surface-variant">URL do webhook para configurar no Jotform (inclua o secret para validação):</p>
+                <code className="text-label-sm text-primary break-all font-mono">
                   {typeof window !== "undefined" ? window.location.origin : "https://seu-app.vercel.app"}/api/webhooks/jotform
                   {form.jotformSecret && form.jotformSecret !== MASKED ? `?secret=${form.jotformSecret}` : "?secret=SEU_SECRET"}
                 </code>
               </div>
               <Button variant="outline" size="sm" onClick={() => test("jotform")} disabled={testing === "jotform"}>
-                {testing === "jotform" ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4" />}
+                {<span className={`material-symbols-outlined text-[18px] ${testing === "jotform" ? "animate-spin" : ""}`}>{testing === "jotform" ? "refresh" : "play_arrow"}</span>}
                 Testar
               </Button>
             </CardContent>
@@ -144,7 +143,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => test("zapi")} disabled={testing === "zapi"}>
-                {testing === "zapi" ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4" />}
+                {<span className={`material-symbols-outlined text-[18px] ${testing === "zapi" ? "animate-spin" : ""}`}>{testing === "zapi" ? "refresh" : "play_arrow"}</span>}
                 Testar WhatsApp
               </Button>
             </CardContent>
@@ -181,7 +180,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
                 </div>
               </div>
               <Button variant="outline" size="sm" onClick={() => test("smtp")} disabled={testing === "smtp"}>
-                {testing === "smtp" ? <Loader2 className="h-4 w-4 animate-spin" /> : <TestTube className="h-4 w-4" />}
+                {<span className={`material-symbols-outlined text-[18px] ${testing === "smtp" ? "animate-spin" : ""}`}>{testing === "smtp" ? "refresh" : "play_arrow"}</span>}
                 Testar e-mail
               </Button>
             </CardContent>
@@ -193,7 +192,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
         <Card>
           <CardHeader><CardTitle>Template de acompanhamento</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-xs text-gray-500">
+            <p className="text-label-sm text-on-surface-variant">
               Variáveis disponíveis: <code className="text-green-400">{"{nome}"}</code>{" "}
               <code className="text-green-400">{"{objetivo}"}</code>{" "}
               <code className="text-green-400">{"{treino_atual}"}</code>{" "}
@@ -224,7 +223,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
         <Card>
           <CardHeader><CardTitle>Protocolo de treino</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-xs text-gray-500 mb-3">
+            <p className="text-label-sm text-on-surface-variant mb-3">
               Descreva seu protocolo preferido. Isso será incluído no prompt da IA ao gerar treinos.
             </p>
             <Textarea
@@ -239,7 +238,7 @@ export function SettingsForm({ settings: initial }: { settings: Settings | null 
 
       <div className="mt-6">
         <Button onClick={save} disabled={saving}>
-          {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+          <span className={`material-symbols-outlined text-[18px] ${saving ? "animate-spin" : ""}`}>{saving ? "refresh" : "save"}</span>
           Salvar configurações
         </Button>
       </div>

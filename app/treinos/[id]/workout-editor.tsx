@@ -6,9 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
-import {
-  ArrowLeft, Save, Wand2, CheckCircle, ClipboardCopy, Plus, Trash2, Loader2,
-} from "lucide-react";
 import { formatDate, levelLabel } from "@/lib/utils";
 
 type Exercise = {
@@ -183,13 +180,13 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
     <div>
       <div className="mb-6 flex items-center gap-3">
         <Link href={`/alunos/${workout.student.id}`}>
-          <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+          <Button variant="ghost" size="icon"><span className="material-symbols-outlined text-[18px]">arrow_back</span></Button>
         </Link>
         <div className="flex-1">
           <Input
             value={workout.title}
             onChange={(e) => setWorkout((w) => ({ ...w, title: e.target.value }))}
-            className="text-xl font-bold bg-transparent border-transparent hover:border-[#2a2a2a] focus:border-green-500/50 px-2"
+            className="text-xl font-bold bg-transparent border-transparent hover:border-outline-variant focus:border-primary/50 px-2"
           />
         </div>
         <Badge
@@ -210,29 +207,29 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
             <CardHeader><CardTitle>Aluno</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div>
-                <p className="text-base font-semibold text-white">{workout.student.name}</p>
-                <p className="text-xs text-gray-500">{levelLabel(workout.student.level)}</p>
+                <p className="text-base font-semibold text-on-surface">{workout.student.name}</p>
+                <p className="text-xs text-on-surface-variant">{levelLabel(workout.student.level)}</p>
               </div>
               {workout.student.goal && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Objetivo</p>
-                  <p className="text-sm text-gray-300">{workout.student.goal}</p>
+                  <p className="text-xs text-on-surface-variant mb-0.5">Objetivo</p>
+                  <p className="text-sm text-on-surface">{workout.student.goal}</p>
                 </div>
               )}
               {workout.student.restrictions && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-0.5">Restrições</p>
-                  <p className="text-sm text-gray-300">{workout.student.restrictions}</p>
+                  <p className="text-xs text-on-surface-variant mb-0.5">Restrições</p>
+                  <p className="text-sm text-on-surface">{workout.student.restrictions}</p>
                 </div>
               )}
-              <div className="flex gap-2 text-xs text-gray-500">
+              <div className="flex gap-2 text-xs text-on-surface-variant">
                 <span>{workout.student.daysPerWeek}x/sem</span>
                 <span>·</span>
                 <span>{workout.student.sessionDuration}min</span>
               </div>
               {workout.student.photos.length > 0 && (
                 <div>
-                  <p className="text-xs text-gray-500 mb-1.5">Fotos de avaliação</p>
+                  <p className="text-xs text-on-surface-variant mb-1.5">Fotos de avaliação</p>
                   <div className="grid grid-cols-2 gap-1.5">
                     {workout.student.photos.slice(0, 4).map((p) => (
                       <img key={p.id} src={p.url} alt={p.angle ?? "foto"} className="rounded-lg aspect-[3/4] object-cover w-full" />
@@ -248,16 +245,16 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
         <div className="col-span-12 lg:col-span-5">
           <div className="flex gap-2 mb-4">
             <Button variant="outline" size="sm" onClick={handleRegenerate} disabled={regenerating}>
-              {regenerating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+              {regenerating ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>}
               Regenerar com IA
             </Button>
             <Button variant="secondary" size="sm" onClick={() => handleSave()} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {saving ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span> : <span className="material-symbols-outlined text-[18px]">save</span>}
               Salvar
             </Button>
             {workout.status !== "aprovado" && (
               <Button size="sm" onClick={() => handleSave("aprovado")} disabled={saving}>
-                <CheckCircle className="h-4 w-4" />
+                <span className="material-symbols-outlined text-[18px]">check</span>
                 Aprovar
               </Button>
             )}
@@ -270,14 +267,14 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                   <Input
                     value={session.name}
                     onChange={(e) => updateSession(si, "name", e.target.value)}
-                    className="font-semibold text-white"
+                    className="font-semibold text-on-surface"
                     placeholder="Nome da sessão"
                   />
                 </div>
                 <div className="space-y-2">
                   {session.exercises.map((ex, ei) => (
-                    <div key={ex.id} className="flex gap-2 items-start rounded-lg bg-[#0f0f0f] p-2.5">
-                      <span className="text-xs text-gray-600 mt-2 w-4 text-right shrink-0">{ei + 1}</span>
+                    <div key={ex.id} className="flex gap-2 items-start rounded-lg bg-surface-container-lowest p-2.5">
+                      <span className="text-xs text-on-surface-variant mt-2 w-4 text-right shrink-0">{ei + 1}</span>
                       <div className="flex-1 grid gap-1.5">
                         <Input
                           value={ex.name}
@@ -287,7 +284,7 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                         />
                         <div className="grid grid-cols-3 gap-1.5">
                           <div>
-                            <label className="text-xs text-gray-600">Séries</label>
+                            <label className="text-xs text-on-surface-variant">Séries</label>
                             <Input
                               type="number"
                               value={ex.sets}
@@ -296,7 +293,7 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-600">Reps</label>
+                            <label className="text-xs text-on-surface-variant">Reps</label>
                             <Input
                               value={ex.reps}
                               onChange={(e) => updateExercise(si, ei, "reps", e.target.value)}
@@ -305,7 +302,7 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-gray-600">Descanso (s)</label>
+                            <label className="text-xs text-on-surface-variant">Descanso (s)</label>
                             <Input
                               type="number"
                               value={ex.rest}
@@ -323,9 +320,9 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                       </div>
                       <button
                         onClick={() => removeExercise(si, ei)}
-                        className="text-gray-600 hover:text-red-400 transition-colors mt-1.5"
+                        className="text-on-surface-variant hover:text-error transition-colors mt-1.5"
                       >
-                        <Trash2 className="h-3.5 w-3.5" />
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
                       </button>
                     </div>
                   ))}
@@ -333,10 +330,10 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="mt-2 w-full text-gray-500"
+                  className="mt-2 w-full text-on-surface-variant"
                   onClick={() => addExercise(si)}
                 >
-                  <Plus className="h-4 w-4" />
+                  <span className="material-symbols-outlined text-[18px]">add</span>
                   Adicionar exercício
                 </Button>
               </Card>
@@ -351,13 +348,13 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
               <div className="flex items-center justify-between">
                 <CardTitle>Exportação MFIT</CardTitle>
                 <Button variant="outline" size="sm" onClick={copyExport}>
-                  <ClipboardCopy className="h-4 w-4" />
+                  <span className="material-symbols-outlined text-[18px]">content_copy</span>
                   {copied ? "Copiado!" : "Copiar"}
                 </Button>
               </div>
             </CardHeader>
             <CardContent>
-              <pre className="text-xs text-gray-300 whitespace-pre-wrap font-mono leading-relaxed bg-[#0f0f0f] rounded-lg p-4 max-h-[500px] overflow-y-auto">
+              <pre className="text-xs text-on-surface whitespace-pre-wrap font-mono leading-relaxed bg-surface-container-lowest rounded-lg p-4 max-h-[500px] overflow-y-auto">
                 {exportText || "Adicione exercícios para ver o preview"}
               </pre>
               <label className="mt-4 flex items-center gap-2 cursor-pointer group">
@@ -365,14 +362,14 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                   type="checkbox"
                   checked={mfitDone}
                   onChange={(e) => handleMfitDone(e.target.checked)}
-                  className="h-4 w-4 rounded accent-green-500"
+                  className="h-4 w-4 rounded accent-primary"
                 />
-                <span className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                <span className="text-sm text-on-surface-variant group-hover:text-on-surface transition-colors">
                   ✅ Já cadastrei no MFIT
                 </span>
               </label>
               {workout.mfitSyncedAt && (
-                <p className="mt-1 text-xs text-gray-600">
+                <p className="mt-1 text-xs text-on-surface-variant">
                   Sincronizado em {formatDate(workout.mfitSyncedAt)}
                 </p>
               )}

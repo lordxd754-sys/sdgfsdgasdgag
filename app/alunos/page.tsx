@@ -5,7 +5,6 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { UserPlus, Search } from "lucide-react";
 import Link from "next/link";
 import { formatDate, daysSince, levelLabel, statusLabel } from "@/lib/utils";
 import { StudentFilters } from "./student-filters";
@@ -86,12 +85,12 @@ export default async function AlunosPage({
     <AppLayout formCount={newForms} overdueCount={overdueCount}>
       <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 className="font-syne text-3xl font-bold text-white">Alunos</h1>
-          <p className="mt-1 text-sm text-gray-500">{total} alunos cadastrados</p>
+          <h1 className="text-headline-lg font-bold text-on-surface">Alunos</h1>
+          <p className="mt-1 text-label-md text-on-surface-variant">{total} alunos cadastrados</p>
         </div>
         <Link href="/alunos/novo">
           <Button>
-            <UserPlus className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">person_add</span>
             Novo aluno
           </Button>
         </Link>
@@ -103,20 +102,20 @@ export default async function AlunosPage({
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-[#2a2a2a] text-left">
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500">Aluno</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500">Objetivo</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500">Nível</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500">Status</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500">Último contato</th>
-                <th className="px-4 py-3 text-xs font-medium uppercase tracking-wide text-gray-500">Treino</th>
+              <tr className="border-b border-outline-variant text-left bg-surface-container-high/50">
+                <th className="px-4 py-3 text-label-md text-on-surface-variant uppercase tracking-wider">Aluno</th>
+                <th className="px-4 py-3 text-label-md text-on-surface-variant uppercase tracking-wider">Objetivo</th>
+                <th className="px-4 py-3 text-label-md text-on-surface-variant uppercase tracking-wider">Nível</th>
+                <th className="px-4 py-3 text-label-md text-on-surface-variant uppercase tracking-wider">Status</th>
+                <th className="px-4 py-3 text-label-md text-on-surface-variant uppercase tracking-wider">Último contato</th>
+                <th className="px-4 py-3 text-label-md text-on-surface-variant uppercase tracking-wider">Treino</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#2a2a2a]">
+            <tbody className="divide-y divide-outline-variant">
               {students.length === 0 && (
                 <tr>
-                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-gray-500">
+                  <td colSpan={7} className="px-4 py-12 text-center text-label-md text-on-surface-variant">
                     Nenhum aluno encontrado
                   </td>
                 </tr>
@@ -127,7 +126,7 @@ export default async function AlunosPage({
                 const contactUrgent = days > 15;
 
                 return (
-                  <tr key={student.id} className="hover:bg-[#1f1f1f] transition-colors">
+                  <tr key={student.id} className="hover:bg-surface-container-high transition-colors">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
                         <div
@@ -140,12 +139,12 @@ export default async function AlunosPage({
                           }`}
                         />
                         <div>
-                          <p className="text-sm font-medium text-white">{student.name}</p>
-                          <p className="text-xs text-gray-500">{student.email}</p>
+                          <p className="text-body-md font-semibold text-on-surface">{student.name}</p>
+                          <p className="text-label-sm text-on-surface-variant">{student.email}</p>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-400">
+                    <td className="px-4 py-3 text-body-md text-on-surface-variant">
                       {student.goal ?? "—"}
                     </td>
                     <td className="px-4 py-3">
@@ -165,7 +164,7 @@ export default async function AlunosPage({
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-sm ${contactUrgent ? "text-red-400" : "text-gray-400"}`}>
+                      <span className={`text-body-md ${contactUrgent ? "text-error" : "text-on-surface-variant"}`}>
                         {student.lastContactAt ? formatDate(student.lastContactAt) : "Nunca"}
                         {contactUrgent && student.lastContactAt && (
                           <span className="ml-1 text-xs">({days}d)</span>
@@ -191,8 +190,8 @@ export default async function AlunosPage({
           </table>
         </div>
         {totalPages > 1 && (
-          <div className="flex items-center justify-between border-t border-[#2a2a2a] px-4 py-3">
-            <p className="text-sm text-gray-500">
+          <div className="flex items-center justify-between border-t border-outline-variant px-4 py-3">
+            <p className="text-label-sm text-on-surface-variant">
               Página {page} de {totalPages}
             </p>
             <div className="flex gap-2">

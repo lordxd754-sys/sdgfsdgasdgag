@@ -1,11 +1,21 @@
 import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
-  ({ className, ...props }, ref) => (
+interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
+  glass?: boolean;
+}
+
+const Card = React.forwardRef<HTMLDivElement, CardProps>(
+  ({ className, glass = true, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border border-[#2a2a2a] bg-[#1a1a1a] p-6", className)}
+      className={cn(
+        "rounded-xl",
+        glass
+          ? "glass-card"
+          : "bg-surface-container border border-outline-variant",
+        className
+      )}
       {...props}
     />
   )
@@ -14,7 +24,7 @@ Card.displayName = "Card";
 
 const CardHeader = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("mb-4 flex flex-col gap-1", className)} {...props} />
+    <div ref={ref} className={cn("px-6 py-5 border-b border-outline-variant", className)} {...props} />
   )
 );
 CardHeader.displayName = "CardHeader";
@@ -23,7 +33,7 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, React.HTMLAttributes<HTML
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn("font-syne text-lg font-semibold text-white", className)}
+      className={cn("text-headline-md font-semibold text-on-surface", className)}
       {...props}
     />
   )
@@ -32,14 +42,14 @@ CardTitle.displayName = "CardTitle";
 
 const CardContent = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("", className)} {...props} />
+    <div ref={ref} className={cn("px-6 py-5", className)} {...props} />
   )
 );
 CardContent.displayName = "CardContent";
 
 const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement>>(
   ({ className, ...props }, ref) => (
-    <div ref={ref} className={cn("mt-4 flex items-center gap-2", className)} {...props} />
+    <div ref={ref} className={cn("px-6 py-4 border-t border-outline-variant", className)} {...props} />
   )
 );
 CardFooter.displayName = "CardFooter";

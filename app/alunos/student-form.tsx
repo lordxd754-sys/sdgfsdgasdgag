@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Card } from "@/components/ui/card";
-import { Loader2, Save, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useToast } from "@/components/ui/toast";
 
@@ -53,7 +52,7 @@ export function StudentForm({ defaultValues = {}, studentId }: StudentFormProps)
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-3xl">
       <Card>
-        <h2 className="font-syne text-base font-semibold text-white mb-4">Dados pessoais</h2>
+        <h2 className="text-headline-md font-semibold text-on-surface mb-4">Dados pessoais</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
             <Label htmlFor="name">Nome completo *</Label>
@@ -87,7 +86,7 @@ export function StudentForm({ defaultValues = {}, studentId }: StudentFormProps)
       </Card>
 
       <Card>
-        <h2 className="font-syne text-base font-semibold text-white mb-4">Objetivos e anamnese</h2>
+        <h2 className="text-headline-md font-semibold text-on-surface mb-4">Objetivos e anamnese</h2>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-1.5 sm:col-span-2">
             <Label htmlFor="goal">Objetivo principal</Label>
@@ -139,22 +138,15 @@ export function StudentForm({ defaultValues = {}, studentId }: StudentFormProps)
       <div className="flex gap-3">
         <Link href={studentId ? `/alunos/${studentId}` : "/alunos"}>
           <Button variant="outline" type="button">
-            <ArrowLeft className="h-4 w-4" />
+            <span className="material-symbols-outlined text-[18px]">arrow_back</span>
             Voltar
           </Button>
         </Link>
         <Button type="submit" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Salvando...
-            </>
-          ) : (
-            <>
-              <Save className="h-4 w-4" />
-              {studentId ? "Atualizar aluno" : "Criar aluno"}
-            </>
-          )}
+          <span className={`material-symbols-outlined text-[18px] ${loading ? "animate-spin" : ""}`}>
+            {loading ? "refresh" : "save"}
+          </span>
+          {loading ? "Salvando..." : (studentId ? "Atualizar aluno" : "Criar aluno")}
         </Button>
       </div>
     </form>

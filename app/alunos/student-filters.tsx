@@ -2,7 +2,6 @@
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Search } from "lucide-react";
 import { useCallback } from "react";
 
 interface StudentFiltersProps {
@@ -26,7 +25,7 @@ export function StudentFilters({ q, status, level }: StudentFiltersProps) {
   return (
     <div className="flex gap-3 flex-wrap">
       <div className="relative flex-1 min-w-48">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500" />
+        <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[20px] text-on-surface-variant">search</span>
         <Input
           placeholder="Buscar por nome ou e-mail..."
           defaultValue={q}

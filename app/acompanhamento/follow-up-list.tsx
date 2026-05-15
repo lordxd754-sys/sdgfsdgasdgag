@@ -8,7 +8,6 @@ import { Modal } from "@/components/ui/modal";
 import { Textarea } from "@/components/ui/textarea";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
-import { Send, Wand2, Loader2, MessageSquare } from "lucide-react";
 import { daysSince, formatDate } from "@/lib/utils";
 
 type Student = {
@@ -92,12 +91,12 @@ export function FollowUpList({
   return (
     <>
       <div className="mb-4 flex items-center justify-between">
-        <p className="text-sm text-gray-500">{students.length} alunos ativos</p>
+        <p className="text-label-md text-on-surface-variant">{students.length} alunos ativos</p>
         <label className="flex items-center gap-2 cursor-pointer">
           <div
             onClick={toggleAuto}
             className={`relative h-6 w-11 rounded-full transition-colors ${
-              autoFollowUp ? "bg-green-500" : "bg-[#2a2a2a]"
+              autoFollowUp ? "bg-primary" : "bg-surface-container-highest"
             }`}
           >
             <div
@@ -106,7 +105,7 @@ export function FollowUpList({
               }`}
             />
           </div>
-          <span className="text-sm text-gray-400">Envio automático</span>
+          <span className="text-label-md text-on-surface-variant">Envio automático</span>
         </label>
       </div>
 
@@ -120,29 +119,29 @@ export function FollowUpList({
               <div className="flex items-center gap-3">
                 <div
                   className={`h-2.5 w-2.5 rounded-full flex-shrink-0 ${
-                    urgency === "red" ? "bg-red-500" : urgency === "yellow" ? "bg-yellow-500" : "bg-green-500"
+                    urgency === "red" ? "bg-error" : urgency === "yellow" ? "bg-tertiary" : "bg-primary"
                   }`}
                 />
                 <div>
-                  <p className="font-medium text-white">{student.name}</p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-body-md font-semibold text-on-surface">{student.name}</p>
+                  <p className="text-label-sm text-on-surface-variant">
                     {student.goal ?? "Sem objetivo definido"}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <div className="text-right">
-                  <p className={`text-sm font-medium ${
-                    urgency === "red" ? "text-red-400" : urgency === "yellow" ? "text-yellow-400" : "text-green-400"
+                  <p className={`text-label-md font-semibold ${
+                    urgency === "red" ? "text-error" : urgency === "yellow" ? "text-tertiary" : "text-primary"
                   }`}>
                     {days === Infinity ? "Nunca contatado" : `${days} dias`}
                   </p>
-                  <p className="text-xs text-gray-600">
+                  <p className="text-label-sm text-on-surface-variant/60">
                     {student.lastContactAt ? formatDate(student.lastContactAt) : formatDate(student.createdAt)}
                   </p>
                 </div>
                 <Button size="sm" variant={urgency === "red" ? "default" : "outline"} onClick={() => openModal(student)}>
-                  <Send className="h-4 w-4" />
+                  <span className="material-symbols-outlined text-[16px]">send</span>
                   Enviar
                 </Button>
               </div>
@@ -150,9 +149,9 @@ export function FollowUpList({
           );
         })}
         {students.length === 0 && (
-          <div className="rounded-xl border border-dashed border-[#2a2a2a] p-12 text-center">
-            <MessageSquare className="mx-auto h-8 w-8 text-gray-600 mb-3" />
-            <p className="text-sm text-gray-500">Nenhum aluno ativo</p>
+          <div className="glass-card rounded-xl p-12 text-center">
+            <span className="material-symbols-outlined text-[48px] text-primary/20 block mb-3">monitoring</span>
+            <p className="text-label-md text-on-surface-variant">Nenhum aluno ativo</p>
           </div>
         )}
       </div>
@@ -170,7 +169,9 @@ export function FollowUpList({
             onClick={() => selectedStudent && generateMessage(selectedStudent)}
             disabled={generating}
           >
-            {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wand2 className="h-4 w-4" />}
+            <span className={`material-symbols-outlined text-[16px] ${generating ? "animate-spin" : ""}`}>
+              {generating ? "refresh" : "auto_fix_high"}
+            </span>
             Gerar com IA
           </Button>
           <Textarea
@@ -186,7 +187,9 @@ export function FollowUpList({
           <div className="flex gap-3 justify-end">
             <Button variant="outline" onClick={() => setSelectedStudent(null)}>Cancelar</Button>
             <Button onClick={sendMessage} disabled={sending || !message.trim()}>
-              {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+              <span className={`material-symbols-outlined text-[16px] ${sending ? "animate-spin" : ""}`}>
+                {sending ? "refresh" : "send"}
+              </span>
               Enviar
             </Button>
           </div>

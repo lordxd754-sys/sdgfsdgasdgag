@@ -12,18 +12,18 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-green-500/50",
+          "inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary/40",
           {
-            "bg-green-500 text-black hover:bg-green-400": variant === "default",
-            "border border-[#2a2a2a] text-gray-300 hover:bg-[#2a2a2a] hover:text-white": variant === "outline",
-            "text-gray-400 hover:text-white hover:bg-[#2a2a2a]": variant === "ghost",
-            "bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/20": variant === "destructive",
-            "bg-[#2a2a2a] text-gray-300 hover:bg-[#333] hover:text-white": variant === "secondary",
+            "bg-primary-container text-on-primary hover:brightness-110 hover:glow-primary": variant === "default",
+            "border border-outline-variant text-on-surface hover:bg-surface-container-high": variant === "outline",
+            "text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high": variant === "ghost",
+            "bg-error/10 text-error border border-error/20 hover:bg-error/20": variant === "destructive",
+            "bg-surface-container-highest text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface": variant === "secondary",
           },
           {
-            "h-10 px-4 py-2 text-sm": size === "default",
-            "h-8 px-3 text-xs": size === "sm",
-            "h-12 px-6 text-base": size === "lg",
+            "py-2.5 px-5 text-sm": size === "default",
+            "py-1.5 px-3 text-sm": size === "sm",
+            "py-3 px-8 text-base": size === "lg",
             "h-9 w-9 p-0": size === "icon",
           },
           className
