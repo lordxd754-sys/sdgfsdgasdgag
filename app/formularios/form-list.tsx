@@ -11,6 +11,7 @@ import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
 import { extractStudentFromRaw } from "@/lib/form-utils";
+import Link from "next/link";
 
 interface FormResponse {
   id: string;
@@ -132,12 +133,13 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
                           </>
                         )}
                         {form.status === "processado" && form.studentId && (
-                          <Button variant="ghost" size="sm" asChild>
-                            <a href={`/alunos/${form.studentId}`}>
-                              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
-                              Ver aluno
-                            </a>
-                          </Button>
+                          <Link
+                            href={`/alunos/${form.studentId}`}
+                            className="inline-flex items-center gap-1.5 rounded-xl py-1.5 px-3 text-sm font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-all duration-150"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                            Ver aluno
+                          </Link>
                         )}
                       </div>
                     </td>

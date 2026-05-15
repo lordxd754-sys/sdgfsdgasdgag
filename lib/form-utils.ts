@@ -95,5 +95,5 @@ export function extractPhotoUrlsFromRaw(rawData: string): string[] {
     }
   }
 
-  return [...new Set(urls)];
+  return Array.from(new Set(urls));
 }

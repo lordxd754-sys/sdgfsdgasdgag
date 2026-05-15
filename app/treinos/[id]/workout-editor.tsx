@@ -25,6 +25,18 @@ type Session = {
   exercises: Exercise[];
 };
 
+type Student = {
+  id: string;
+  name: string;
+  goal: string | null;
+  level: string;
+  restrictions: string | null;
+  equipment: string | null;
+  daysPerWeek: number;
+  sessionDuration: number;
+  photos: { id: string; url: string; angle: string | null }[];
+};
+
 type Workout = {
   id: string;
   title: string;
@@ -32,17 +44,7 @@ type Workout = {
   createdAt: Date;
   mfitSyncedAt: Date | null;
   sessions: Session[];
-  student: {
-    id: string;
-    name: string;
-    goal: string | null;
-    level: string;
-    restrictions: string | null;
-    equipment: string | null;
-    daysPerWeek: number;
-    sessionDuration: number;
-    photos: { id: string; url: string; angle: string | null }[];
-  };
+  student: Student | null;
 };
 
 export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
@@ -179,7 +181,7 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
   return (
     <div>
       <div className="mb-6 flex items-center gap-3">
-        <Link href={`/alunos/${workout.student.id}`}>
+        <Link href={workout.student ? `/alunos/${workout.student.id}` : "/alunos"}>
           <Button variant="ghost" size="icon"><span className="material-symbols-outlined text-[18px]">arrow_back</span></Button>
         </Link>
         <div className="flex-1">
@@ -206,36 +208,42 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
           <Card>
             <CardHeader><CardTitle>Aluno</CardTitle></CardHeader>
             <CardContent className="space-y-3">
-              <div>
-                <p className="text-base font-semibold text-on-surface">{workout.student.name}</p>
-                <p className="text-xs text-on-surface-variant">{levelLabel(workout.student.level)}</p>
-              </div>
-              {workout.student.goal && (
-                <div>
-                  <p className="text-xs text-on-surface-variant mb-0.5">Objetivo</p>
-                  <p className="text-sm text-on-surface">{workout.student.goal}</p>
-                </div>
-              )}
-              {workout.student.restrictions && (
-                <div>
-                  <p className="text-xs text-on-surface-variant mb-0.5">Restrições</p>
-                  <p className="text-sm text-on-surface">{workout.student.restrictions}</p>
-                </div>
-              )}
-              <div className="flex gap-2 text-xs text-on-surface-variant">
-                <span>{workout.student.daysPerWeek}x/sem</span>
-                <span>·</span>
-                <span>{workout.student.sessionDuration}min</span>
-              </div>
-              {workout.student.photos.length > 0 && (
-                <div>
-                  <p className="text-xs text-on-surface-variant mb-1.5">Fotos de avaliação</p>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {workout.student.photos.slice(0, 4).map((p) => (
-                      <img key={p.id} src={p.url} alt={p.angle ?? "foto"} className="rounded-lg aspect-[3/4] object-cover w-full" />
-                    ))}
+              {workout.student ? (
+                <>
+                  <div>
+                    <p className="text-base font-semibold text-on-surface">{workout.student.name}</p>
+                    <p className="text-xs text-on-surface-variant">{levelLabel(workout.student.level)}</p>
                   </div>
-                </div>
+                  {workout.student.goal && (
+                    <div>
+                      <p className="text-xs text-on-surface-variant mb-0.5">Objetivo</p>
+                      <p className="text-sm text-on-surface">{workout.student.goal}</p>
+                    </div>
+                  )}
+                  {workout.student.restrictions && (
+                    <div>
+                      <p className="text-xs text-on-surface-variant mb-0.5">Restrições</p>
+                      <p className="text-sm text-on-surface">{workout.student.restrictions}</p>
+                    </div>
+                  )}
+                  <div className="flex gap-2 text-xs text-on-surface-variant">
+                    <span>{workout.student.daysPerWeek}x/sem</span>
+                    <span>·</span>
+                    <span>{workout.student.sessionDuration}min</span>
+                  </div>
+                  {workout.student.photos.length > 0 && (
+                    <div>
+                      <p className="text-xs text-on-surface-variant mb-1.5">Fotos de avaliação</p>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {workout.student.photos.slice(0, 4).map((p) => (
+                          <img key={p.id} src={p.url} alt={p.angle ?? "foto"} className="rounded-lg aspect-[3/4] object-cover w-full" />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <p className="text-sm text-on-surface-variant">Aluno não encontrado</p>
               )}
             </CardContent>
           </Card>

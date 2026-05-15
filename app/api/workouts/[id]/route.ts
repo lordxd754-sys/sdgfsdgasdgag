@@ -72,35 +72,42 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   let sessions: any[] = [];
   if (body.sessions) {
-    for (const [si, s] of body.sessions.entries()) {
-      const { data: ws } = await supabase
-        .from("WorkoutSession")
-        .insert({ id: crypto.randomUUID(), workoutId: id, name: s.name, order: s.order ?? si + 1 })
-        .select()
-        .single();
-
-      if (ws) {
-        const exercises: any[] = [];
-        for (const [ei, ex] of (s.exercises ?? []).entries()) {
-          const { data: exercise } = await supabase
-            .from("Exercise")
-            .insert({
-              id: crypto.randomUUID(),
-              sessionId: (ws as any).id,
-              name: ex.name,
-              sets: parseInt(String(ex.sets)) || 3,
-              reps: String(ex.reps),
-              rest: parseInt(String(ex.rest)) || 60,
-              notes: ex.notes || null,
-              order: ex.order ?? ei + 1,
-            })
+    sessions = (
+      await Promise.all(
+        body.sessions.map(async (s: any, si: number) => {
+          const { data: ws } = await supabase
+            .from("WorkoutSession")
+            .insert({ id: crypto.randomUUID(), workoutId: id, name: s.name, order: s.order ?? si + 1 })
             .select()
             .single();
-          if (exercise) exercises.push(exercise);
-        }
-        sessions.push({ ...(ws as any), exercises });
-      }
-    }
+          if (!ws) return null;
+
+          const exercises = (
+            await Promise.all(
+              (s.exercises ?? []).map((ex: any, ei: number) =>
+                supabase
+                  .from("Exercise")
+                  .insert({
+                    id: crypto.randomUUID(),
+                    sessionId: (ws as any).id,
+                    name: ex.name,
+                    sets: parseInt(String(ex.sets)) || 3,
+                    reps: String(ex.reps),
+                    rest: parseInt(String(ex.rest)) || 60,
+                    notes: ex.notes || null,
+                    order: ex.order ?? ei + 1,
+                  })
+                  .select()
+                  .single()
+                  .then((r) => r.data)
+              )
+            )
+          ).filter(Boolean);
+
+          return { ...(ws as any), exercises };
+        })
+      )
+    ).filter(Boolean);
   }
 
   return NextResponse.json({ ...(updatedWorkout as any), sessions });
