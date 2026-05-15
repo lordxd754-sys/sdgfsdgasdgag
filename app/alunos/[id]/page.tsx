@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { cutoff15Days } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/app-layout";
 import { StudentProfile } from "./student-profile";
 

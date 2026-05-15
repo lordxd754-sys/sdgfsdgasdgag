@@ -30,7 +30,7 @@ export default async function AlunosPage({
   // Build students query
   let studentsQuery = supabase
     .from("Student")
-    .select("*, Workout(*)")
+    .select("id, name, email, phone, status, level, goal, lastContactAt, createdAt, Workout(id, createdAt)")
     .order("createdAt", { ascending: false })
     .range(skip, skip + perPage - 1);
 

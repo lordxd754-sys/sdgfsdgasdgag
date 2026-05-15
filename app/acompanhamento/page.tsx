@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { supabase } from "@/lib/supabase";
+import { cutoff15Days } from "@/lib/utils";
 import { AppLayout } from "@/components/layout/app-layout";
 import { FollowUpList } from "./follow-up-list";
 
@@ -15,7 +16,7 @@ export default async function AcompanhamentoPage() {
   const [studentsResult, settingsResult, formCountResult, overdueCountResult] = await Promise.all([
     supabase
       .from("Student")
-      .select("*, Workout(*)")
+      .select("id, name, email, phone, goal, lastContactAt, createdAt, Workout(id, title, createdAt)")
       .eq("status", "ativo")
       .order("lastContactAt", { ascending: true }),
     supabase.from("Settings").select("*").limit(1).maybeSingle(),

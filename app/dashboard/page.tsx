@@ -50,7 +50,7 @@ export default async function DashboardPage() {
 
     supabase
       .from("Student")
-      .select("*, Workout(*)")
+      .select("id, name, goal, lastContactAt, createdAt, Workout(id, title, createdAt)")
       .eq("status", "ativo")
       .order("lastContactAt", { ascending: true })
       .limit(10),

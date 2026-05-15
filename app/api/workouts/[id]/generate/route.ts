@@ -77,39 +77,44 @@ Gere um plano de treino retornando APENAS um JSON válido com esta estrutura:
       .select()
       .single();
 
-    // Insert sessions and exercises sequentially
-    const sessions: any[] = [];
-    for (const s of workoutData.sessions) {
-      const { data: ws } = await supabase
-        .from("WorkoutSession")
-        .insert({ id: crypto.randomUUID(), workoutId: id, name: s.name, order: s.order })
-        .select()
-        .single();
+    // Insert all sessions in parallel, then all exercises per session in parallel
+    const sessions = await Promise.all(
+      workoutData.sessions.map(async (s: any) => {
+        const { data: ws } = await supabase
+          .from("WorkoutSession")
+          .insert({ id: crypto.randomUUID(), workoutId: id, name: s.name, order: s.order })
+          .select()
+          .single();
+        if (!ws) return null;
 
-      if (ws) {
-        const exercises: any[] = [];
-        for (const ex of s.exercises) {
-          const { data: exercise } = await supabase
-            .from("Exercise")
-            .insert({
-              id: crypto.randomUUID(),
-              sessionId: (ws as any).id,
-              name: ex.name,
-              sets: ex.sets,
-              reps: String(ex.reps),
-              rest: ex.rest ?? 60,
-              notes: ex.notes || null,
-              order: ex.order,
-            })
-            .select()
-            .single();
-          if (exercise) exercises.push(exercise);
-        }
-        sessions.push({ ...(ws as any), exercises });
-      }
-    }
+        const exercises = (
+          await Promise.all(
+            s.exercises.map((ex: any) =>
+              supabase
+                .from("Exercise")
+                .insert({
+                  id: crypto.randomUUID(),
+                  sessionId: (ws as any).id,
+                  name: ex.name,
+                  sets: ex.sets,
+                  reps: String(ex.reps),
+                  rest: ex.rest ?? 60,
+                  notes: ex.notes || null,
+                  order: ex.order,
+                })
+                .select()
+                .single()
+                .then((r) => r.data)
+            )
+          )
+        ).filter(Boolean);
 
-    return NextResponse.json({ ...(updatedWorkout as any), sessions });
+        return { ...(ws as any), exercises };
+      })
+    );
+    const validSessions = sessions.filter(Boolean);
+
+    return NextResponse.json({ ...(updatedWorkout as any), sessions: validSessions });
   } catch (e) {
     console.error("Generate error:", e);
     return NextResponse.json({ error: "Erro ao gerar treino" }, { status: 500 });

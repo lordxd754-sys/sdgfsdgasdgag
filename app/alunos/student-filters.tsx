@@ -2,7 +2,7 @@
 import { useRouter } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 
 interface StudentFiltersProps {
   q: string;
@@ -12,6 +12,7 @@ interface StudentFiltersProps {
 
 export function StudentFilters({ q, status, level }: StudentFiltersProps) {
   const router = useRouter();
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const update = useCallback((key: string, value: string) => {
     const params = new URLSearchParams();
@@ -32,11 +33,14 @@ export function StudentFilters({ q, status, level }: StudentFiltersProps) {
           className="pl-9"
           onChange={(e) => {
             const val = e.target.value;
-            const params = new URLSearchParams();
-            if (val) params.set("q", val);
-            if (status) params.set("status", status);
-            if (level) params.set("level", level);
-            router.replace(`/alunos?${params.toString()}`);
+            if (debounceRef.current) clearTimeout(debounceRef.current);
+            debounceRef.current = setTimeout(() => {
+              const params = new URLSearchParams();
+              if (val) params.set("q", val);
+              if (status) params.set("status", status);
+              if (level) params.set("level", level);
+              router.replace(`/alunos?${params.toString()}`);
+            }, 400);
           }}
         />
       </div>
