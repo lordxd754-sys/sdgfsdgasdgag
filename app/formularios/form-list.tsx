@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
 import { formatDateTime } from "@/lib/utils";
+import { extractStudentFromRaw } from "@/lib/form-utils";
 
 interface FormResponse {
   id: string;
@@ -17,63 +18,6 @@ interface FormResponse {
   status: string;
   studentId: string | null;
   receivedAt: Date;
-}
-
-function flattenJotformField(val: unknown): string {
-  if (!val) return "";
-  if (typeof val === "string") return val.trim();
-  if (typeof val === "object") {
-    // Jotform name fields: { first: "João", last: "Silva" }
-    const v = val as Record<string, string>;
-    if (v.first || v.last) return `${v.first ?? ""} ${v.last ?? ""}`.trim();
-    // Jotform address fields: { addr_line1, city, state, ... }
-    return Object.values(v).filter(Boolean).join(", ");
-  }
-  return String(val);
-}
-
-function extractFromRaw(rawData: string) {
-  try {
-    const parsed = JSON.parse(rawData);
-    const data =
-      typeof parsed.rawRequest === "string"
-        ? { ...parsed, ...JSON.parse(parsed.rawRequest) }
-        : parsed;
-
-    // Scan all keys for name-like fields (handles any q-number prefix)
-    const findField = (...keys: string[]) => {
-      for (const k of keys) {
-        if (data[k] !== undefined && data[k] !== "") return flattenJotformField(data[k]);
-      }
-      // Fuzzy match: find any key that contains one of the key patterns
-      for (const k of keys) {
-        const match = Object.keys(data).find(
-          (dk) => dk.toLowerCase().includes(k.toLowerCase())
-        );
-        if (match && data[match]) return flattenJotformField(data[match]);
-      }
-      return "";
-    };
-
-    const name = findField(
-      "q3_nome", "q3_name", "nome", "name", "q3_nome_completo",
-      "nome_completo", "fullName", "full_name", "Nome"
-    );
-    const email = findField(
-      "q4_email", "email", "Email", "q4_emailAddress", "emailAddress"
-    );
-    const phone = findField(
-      "q5_phone", "phone", "telefone", "whatsapp", "celular",
-      "q5_phoneNumber", "phoneNumber"
-    );
-    const goal = findField(
-      "q6_objetivo", "objetivo", "goal", "q6_goal", "meta", "objetivo_principal"
-    );
-
-    return { name, email, phone, goal };
-  } catch {
-    return { name: "", email: "", phone: "", goal: "" };
-  }
 }
 
 export function FormList({ forms }: { forms: FormResponse[] }) {
@@ -89,8 +33,8 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
     if (!createModal) return;
     setCreating(true);
 
-    const form = e.currentTarget;
-    const data = Object.fromEntries(new FormData(form));
+    const formEl = e.currentTarget;
+    const data = Object.fromEntries(new FormData(formEl));
 
     const res = await fetch("/api/students", {
       method: "POST",
@@ -99,13 +43,12 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
     });
 
     if (res.ok) {
-      const student = await res.json();
       toast("Aluno criado com sucesso!");
       setCreateModal(null);
       router.refresh();
     } else {
-      const data = await res.json().catch(() => null);
-      toast(data?.error ?? "Erro ao criar aluno", "error");
+      const body = await res.json().catch(() => null);
+      toast(body?.error ?? "Erro ao criar aluno", "error");
     }
     setCreating(false);
   }
@@ -144,8 +87,8 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
                   </td>
                 </tr>
               )}
-              {forms.map((form: (typeof forms)[number]) => {
-                const { name, email } = extractFromRaw(form.rawData);
+              {forms.map((form) => {
+                const { name, email } = extractStudentFromRaw(form.rawData);
                 return (
                   <tr key={form.id} className="hover:bg-surface-container-high transition-colors">
                     <td className="px-4 py-3 text-body-md font-semibold text-on-surface">{name || "—"}</td>
@@ -159,7 +102,9 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
                           : "danger"
                         }
                       >
-                        {form.status === "novo" ? "Novo" : form.status === "processado" ? "Processado" : "Descartado"}
+                        {form.status === "novo" ? "Novo"
+                          : form.status === "processado" ? "Processado"
+                          : "Descartado"}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
@@ -186,6 +131,14 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
                             </Button>
                           </>
                         )}
+                        {form.status === "processado" && form.studentId && (
+                          <Button variant="ghost" size="sm" asChild>
+                            <a href={`/alunos/${form.studentId}`}>
+                              <span className="material-symbols-outlined text-[16px]">open_in_new</span>
+                              Ver aluno
+                            </a>
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -207,60 +160,74 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
 
       {/* Create Student Modal */}
       <Modal open={!!createModal} onClose={() => setCreateModal(null)} title="Criar aluno a partir do formulário" className="max-w-2xl">
-        {createModal && (
-          <form onSubmit={handleCreate} className="space-y-4">
-            {(() => {
-              const { name, email, phone, goal } = extractFromRaw(createModal.rawData);
-              return (
-                <>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label>Nome *</Label>
-                      <Input name="name" defaultValue={name} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>E-mail *</Label>
-                      <Input name="email" type="email" defaultValue={email} required />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>WhatsApp</Label>
-                      <Input name="phone" defaultValue={phone} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Objetivo</Label>
-                      <Input name="goal" defaultValue={goal} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Nível</Label>
-                      <Select name="level">
-                        <option value="iniciante">Iniciante</option>
-                        <option value="intermediario">Intermediário</option>
-                        <option value="avancado">Avançado</option>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Dias/semana</Label>
-                      <Select name="daysPerWeek">
-                        <option value="3">3 dias</option>
-                        <option value="4">4 dias</option>
-                        <option value="5">5 dias</option>
-                      </Select>
-                    </div>
-                  </div>
-                  <div className="flex gap-3 justify-end">
-                    <Button variant="outline" type="button" onClick={() => setCreateModal(null)}>Cancelar</Button>
-                    <Button type="submit" disabled={creating}>
-                      <span className={`material-symbols-outlined text-[18px] ${creating ? "animate-spin" : ""}`}>
-                        {creating ? "refresh" : "person_add"}
-                      </span>
-                      Criar aluno
-                    </Button>
-                  </div>
-                </>
-              );
-            })()}
-          </form>
-        )}
+        {createModal && (() => {
+          const f = extractStudentFromRaw(createModal.rawData);
+          return (
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label>Nome *</Label>
+                  <Input name="name" defaultValue={f.name} required />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>E-mail</Label>
+                  <Input name="email" type="email" defaultValue={f.email} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>WhatsApp</Label>
+                  <Input name="phone" defaultValue={f.phone} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Cidade</Label>
+                  <Input name="city" defaultValue={f.city} />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Objetivo</Label>
+                  <Input name="goal" defaultValue={f.goal} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Nível</Label>
+                  <Select name="level" defaultValue={f.level || "iniciante"}>
+                    <option value="iniciante">Iniciante</option>
+                    <option value="intermediario">Intermediário</option>
+                    <option value="avancado">Avançado</option>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Dias/semana</Label>
+                  <Select name="daysPerWeek" defaultValue={f.daysPerWeek || "3"}>
+                    <option value="2">2 dias</option>
+                    <option value="3">3 dias</option>
+                    <option value="4">4 dias</option>
+                    <option value="5">5 dias</option>
+                    <option value="6">6 dias</option>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Duração da sessão (min)</Label>
+                  <Input name="sessionDuration" type="number" defaultValue={f.sessionDuration || "60"} />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Restrições / lesões</Label>
+                  <Input name="restrictions" defaultValue={f.restrictions} />
+                </div>
+                <div className="space-y-1.5 sm:col-span-2">
+                  <Label>Equipamentos disponíveis</Label>
+                  <Input name="equipment" defaultValue={f.equipment} />
+                </div>
+              </div>
+              <div className="flex gap-3 justify-end">
+                <Button variant="outline" type="button" onClick={() => setCreateModal(null)}>Cancelar</Button>
+                <Button type="submit" disabled={creating}>
+                  <span className={`material-symbols-outlined text-[18px] ${creating ? "animate-spin" : ""}`}>
+                    {creating ? "refresh" : "person_add"}
+                  </span>
+                  Criar aluno
+                </Button>
+              </div>
+            </form>
+          );
+        })()}
       </Modal>
     </>
   );
