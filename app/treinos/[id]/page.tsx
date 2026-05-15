@@ -14,16 +14,35 @@ export default async function TreinoPage({ params }: { params: { id: string } })
   const { id } = await Promise.resolve(params);
   const cutoff = cutoff15Days();
 
-  const [workoutResult, formCountResult, overdueCountResult] = await Promise.all([
+  // Step 1: fetch the workout row only (no joins) — isolates 404 vs query error
+  const { data: workoutRaw, error: workoutError } = await supabase
+    .from("Workout")
+    .select("id, title, status, content, mfitSyncedAt, createdAt, studentId")
+    .eq("id", id)
+    .single();
+
+  if (workoutError?.code === "PGRST116" || !workoutRaw) notFound();
+  if (workoutError) throw new Error(`Erro ao carregar treino: ${(workoutError as any).message}`);
+
+  // Step 2: fetch related data in parallel — simple, one-level joins each
+  const [sessionsResult, studentResult, formCountResult, overdueCountResult] = await Promise.all([
     supabase
-      .from("Workout")
-      .select("*, Student(*, Photo(*)), WorkoutSession(*, Exercise(*))")
-      .eq("id", id)
+      .from("WorkoutSession")
+      .select("id, name, order, workoutId, Exercise(id, name, sets, reps, rest, notes, order, sessionId)")
+      .eq("workoutId", id)
+      .order("order", { ascending: true }),
+
+    supabase
+      .from("Student")
+      .select("id, name, goal, level, daysPerWeek, sessionDuration, restrictions, equipment, Photo(id, url, angle, takenAt)")
+      .eq("id", (workoutRaw as any).studentId)
       .single(),
+
     supabase
       .from("FormResponse")
       .select("*", { count: "exact", head: true })
       .eq("status", "novo"),
+
     supabase
       .from("Student")
       .select("*", { count: "exact", head: true })
@@ -31,34 +50,26 @@ export default async function TreinoPage({ params }: { params: { id: string } })
       .or(`lastContactAt.lt.${cutoff},and(lastContactAt.is.null,createdAt.lt.${cutoff})`),
   ]);
 
-  if (!workoutResult.data) notFound();
+  const studentData = studentResult.data as any;
 
-  const raw = workoutResult.data as any;
   const workout = {
-    ...raw,
-    student: raw.Student
+    ...workoutRaw,
+    student: studentData
       ? {
-          ...raw.Student,
-          photos: raw.Student.Photo
-            ? [...raw.Student.Photo]
-                .sort(
-                  (a: any, b: any) =>
-                    new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime()
-                )
+          ...studentData,
+          photos: Array.isArray(studentData.Photo)
+            ? [...studentData.Photo]
+                .sort((a: any, b: any) => new Date(b.takenAt).getTime() - new Date(a.takenAt).getTime())
                 .slice(0, 4)
             : [],
         }
       : null,
-    sessions: raw.WorkoutSession
-      ? [...raw.WorkoutSession]
-          .sort((a: any, b: any) => a.order - b.order)
-          .map((s: any) => ({
-            ...s,
-            exercises: s.Exercise
-              ? [...s.Exercise].sort((a: any, b: any) => a.order - b.order)
-              : [],
-          }))
-      : [],
+    sessions: (sessionsResult.data ?? []).map((s: any) => ({
+      ...s,
+      exercises: Array.isArray(s.Exercise)
+        ? [...s.Exercise].sort((a: any, b: any) => a.order - b.order)
+        : [],
+    })),
   };
 
   const formCount = formCountResult.count ?? 0;
