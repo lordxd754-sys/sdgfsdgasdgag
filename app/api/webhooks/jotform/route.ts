@@ -111,7 +111,10 @@ async function autoCreateStudent(
   const fields = extractStudentFromRaw(rawData);
 
   // Need at minimum a name to create the student
-  if (!fields.name) return;
+  if (!fields.name) {
+    console.warn("[autoCreateStudent] No name extracted for form:", formResponseId);
+    return;
+  }
 
   const now = new Date().toISOString();
   const studentId = randomUUID();
@@ -129,8 +132,28 @@ async function autoCreateStudent(
     avancado: "avancado",
     advanced: "avancado",
   };
+  const levelRaw = fields.level.toLowerCase().trim();
+  // Partial match: "nível iniciante" → "iniciante"
   const level =
-    levelMap[fields.level.toLowerCase().trim()] ?? "iniciante";
+    levelMap[levelRaw] ??
+    (Object.keys(levelMap).find((k) => levelRaw.includes(k)) ? levelMap[Object.keys(levelMap).find((k) => levelRaw.includes(k))!] : null) ??
+    "iniciante";
+
+  // Parse birthdate safely — handle ISO, YYYY-MM-DD, DD/MM/YYYY
+  let parsedBirthdate: string | null = null;
+  if (fields.birthdate) {
+    try {
+      let d = new Date(fields.birthdate);
+      if (isNaN(d.getTime())) {
+        // Try Brazilian format DD/MM/YYYY
+        const m = fields.birthdate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+        if (m) d = new Date(parseInt(m[3]), parseInt(m[2]) - 1, parseInt(m[1]));
+      }
+      if (!isNaN(d.getTime())) parsedBirthdate = d.toISOString();
+    } catch {
+      // ignore invalid date
+    }
+  }
 
   // Try to create student — handle duplicate email gracefully
   const { data: student, error } = await supabase
@@ -140,7 +163,7 @@ async function autoCreateStudent(
       name: fields.name,
       email: fields.email || null,
       phone: fields.phone || null,
-      birthdate: fields.birthdate ? new Date(fields.birthdate).toISOString() : null,
+      birthdate: parsedBirthdate,
       city: fields.city || null,
       goal: fields.goal || null,
       level,
@@ -166,8 +189,12 @@ async function autoCreateStudent(
         .eq("email", fields.email)
         .single();
       if (existing) resolvedStudentId = (existing as any).id;
+      else {
+        console.error("[autoCreateStudent] Duplicate email but student not found:", fields.email);
+        return;
+      }
     } else {
-      console.error("Auto-create student error:", error.message);
+      console.error("[autoCreateStudent] Insert error:", error.message, "| name:", fields.name);
       return;
     }
   } else {
@@ -219,10 +246,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "DB error" }, { status: 500 });
     }
 
-    // Auto-create student in background — don't block the webhook response
-    autoCreateStudent(rawData, formResponseId).catch((err) =>
-      console.error("autoCreateStudent error:", err)
-    );
+    // Run synchronously — fire-and-forget is unreliable on serverless (Vercel kills
+    // the function as soon as the response is sent, before background work completes)
+    try {
+      await autoCreateStudent(rawData, formResponseId);
+    } catch (err) {
+      console.error("[webhook] autoCreateStudent threw:", err);
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
