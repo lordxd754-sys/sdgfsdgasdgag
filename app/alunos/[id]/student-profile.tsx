@@ -65,6 +65,7 @@ export function StudentProfile({ student }: { student: FullStudent }) {
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [generateModal, setGenerateModal] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [creatingManual, setCreatingManual] = useState(false);
   const [followModal, setFollowModal] = useState(false);
   const [followMessage, setFollowMessage] = useState("");
   const [followChannel, setFollowChannel] = useState("email");
@@ -98,6 +99,22 @@ export function StudentProfile({ student }: { student: FullStudent }) {
       toast("Erro ao enviar foto", "error");
     }
     setUploadingPhoto(false);
+  }
+
+  async function handleCreateManual() {
+    setCreatingManual(true);
+    const res = await fetch(`/api/students/${student.id}/workouts`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ title: `Treino de ${student.name}` }),
+    });
+    if (res.ok) {
+      const workout = await res.json();
+      router.push(`/treinos/${workout.id}`);
+    } else {
+      toast("Erro ao criar treino", "error");
+      setCreatingManual(false);
+    }
   }
 
   async function handleGenerateWorkout() {
@@ -346,19 +363,35 @@ export function StudentProfile({ student }: { student: FullStudent }) {
         <div>
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-on-surface">Treinos</h2>
-            <Button size="sm" onClick={() => setGenerateModal(true)}>
-              <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
-              Gerar com IA
-            </Button>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={handleCreateManual} disabled={creatingManual}>
+                {creatingManual
+                  ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+                  : <span className="material-symbols-outlined text-[18px]">edit_note</span>}
+                Criar manualmente
+              </Button>
+              <Button size="sm" onClick={() => setGenerateModal(true)}>
+                <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
+                Gerar com IA
+              </Button>
+            </div>
           </div>
           {student.workouts.length === 0 ? (
             <div className="rounded-xl border border-dashed border-outline-variant p-12 text-center">
               <span className="material-symbols-outlined text-[32px] text-on-surface-variant mx-auto mb-3 block">fitness_center</span>
-              <p className="text-sm text-on-surface-variant">Nenhum treino gerado ainda</p>
-              <Button size="sm" className="mt-4" onClick={() => setGenerateModal(true)}>
-                <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
-                Gerar primeiro treino
-              </Button>
+              <p className="text-sm text-on-surface-variant">Nenhum treino ainda</p>
+              <div className="flex gap-3 justify-center mt-4">
+                <Button variant="outline" size="sm" onClick={handleCreateManual} disabled={creatingManual}>
+                  {creatingManual
+                    ? <span className="material-symbols-outlined text-[18px] animate-spin">refresh</span>
+                    : <span className="material-symbols-outlined text-[18px]">edit_note</span>}
+                  Criar manualmente
+                </Button>
+                <Button size="sm" onClick={() => setGenerateModal(true)}>
+                  <span className="material-symbols-outlined text-[18px]">auto_fix_high</span>
+                  Gerar com IA
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="space-y-3">
