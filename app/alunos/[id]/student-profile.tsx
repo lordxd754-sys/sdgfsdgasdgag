@@ -113,7 +113,8 @@ export function StudentProfile({ student }: { student: FullStudent }) {
       setGenerateModal(false);
       router.push(`/treinos/${workout.id}`);
     } else {
-      toast("Erro ao gerar treino", "error");
+      const data = await res.json().catch(() => ({}));
+      toast(data.error || "Erro ao gerar treino", "error");
     }
     setGenerating(false);
   }
