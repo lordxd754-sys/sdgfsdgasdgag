@@ -40,11 +40,12 @@ export function Sidebar({ formCount = 0, overdueCount = 0 }: SidebarProps) {
     return pathname.startsWith(href);
   };
 
-  // Bottom nav items (mobile — 4 items)
+  // Bottom nav items (mobile — 5 items)
   const bottomNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/alunos", label: "Alunos", icon: "group" },
-    { href: "/treino", label: "Treino", icon: "sports_gymnastics" },
+    { href: "/treinos", label: "Treinos", icon: "fitness_center" },
+    { href: "/treino", label: "Aluno", icon: "sports_gymnastics" },
     { href: "/configuracoes", label: "Ajustes", icon: "settings" },
   ];
 
