@@ -28,7 +28,7 @@ export default async function TreinoPage({ params }: { params: { id: string } })
   const [sessionsResult, studentResult, formCountResult, overdueCountResult] = await Promise.all([
     supabase
       .from("WorkoutSession")
-      .select("id, name, order, workoutId, Exercise(id, name, sets, reps, rest, notes, order, sessionId)")
+      .select("id, name, order, workoutId, Exercise(id, name, sets, reps, rest, notes, order, videoUrl, sessionId)")
       .eq("workoutId", id)
       .order("order", { ascending: true }),
 

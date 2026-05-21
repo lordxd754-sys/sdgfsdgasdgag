@@ -24,12 +24,22 @@ export function Sidebar({ formCount = 0, overdueCount = 0 }: SidebarProps) {
     { href: "/alunos", label: "Alunos", icon: "group" },
     { href: "/formularios", label: "Formulários", icon: "description", badge: formCount },
     { href: "/treinos", label: "Treinos", icon: "fitness_center" },
+    { href: "/treino", label: "Módulo Aluno", icon: "sports_gymnastics" },
     { href: "/acompanhamento", label: "Acompanhamento", icon: "monitoring", badge: overdueCount },
     { href: "/configuracoes", label: "Configurações", icon: "settings" },
   ];
 
-  const isActive = (href: string) =>
-    href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(href);
+  const isActive = (href: string) => {
+    if (href === "/dashboard") return pathname === "/dashboard";
+    if (href === "/treino")
+      return pathname === "/treino" || pathname.startsWith("/treino/");
+    if (href === "/treinos")
+      return (
+        pathname === "/treinos" ||
+        (pathname.startsWith("/treinos/") && !pathname.startsWith("/treino/"))
+      );
+    return pathname.startsWith(href);
+  };
 
   // Bottom nav items (mobile — only 4 items)
   const bottomNavItems = [

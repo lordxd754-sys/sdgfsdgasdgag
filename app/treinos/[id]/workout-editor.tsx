@@ -16,7 +16,16 @@ type Exercise = {
   rest: number;
   notes: string | null;
   order: number;
+  videoUrl?: string | null;
 };
+
+function isYoutube(url: string) {
+  return url.includes("youtube.com") || url.includes("youtu.be");
+}
+function youtubeVideoId(url: string) {
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([^&?\s]+)/);
+  return match?.[1] ?? "";
+}
 
 type Session = {
   id: string;
@@ -97,6 +106,7 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                   rest: 60,
                   notes: null,
                   order: s.exercises.length + 1,
+                  videoUrl: null,
                 },
               ],
             }
@@ -325,6 +335,25 @@ export function WorkoutEditor({ workout: initial }: { workout: Workout }) {
                           placeholder="Observações técnicas..."
                           className="text-xs"
                         />
+                        <div>
+                          <label className="text-xs text-on-surface-variant">URL do vídeo (YouTube ou MP4)</label>
+                          <div className="flex gap-2 items-center">
+                            <Input
+                              value={ex.videoUrl ?? ""}
+                              onChange={(e) => updateExercise(si, ei, "videoUrl", e.target.value)}
+                              placeholder="https://youtube.com/watch?v=..."
+                              className="text-xs"
+                            />
+                            {ex.videoUrl && isYoutube(ex.videoUrl) && (
+                              // eslint-disable-next-line @next/next/no-img-element
+                              <img
+                                src={`https://img.youtube.com/vi/${youtubeVideoId(ex.videoUrl)}/default.jpg`}
+                                alt="thumb"
+                                className="h-8 w-12 object-cover rounded shrink-0"
+                              />
+                            )}
+                          </div>
+                        </div>
                       </div>
                       <button
                         onClick={() => removeExercise(si, ei)}

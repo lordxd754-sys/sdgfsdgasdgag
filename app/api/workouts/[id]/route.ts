@@ -96,6 +96,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
                     rest: parseInt(String(ex.rest)) || 60,
                     notes: ex.notes || null,
                     order: ex.order ?? ei + 1,
+                    videoUrl: ex.videoUrl || null,
                   })
                   .select()
                   .single()

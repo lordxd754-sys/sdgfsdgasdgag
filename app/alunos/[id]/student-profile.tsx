@@ -214,6 +214,12 @@ export function StudentProfile({ student }: { student: FullStudent }) {
           </div>
         </div>
         <div className="flex gap-2">
+          <Link href={`/treino?studentId=${student.id}`}>
+            <Button variant="outline" size="sm">
+              <span className="material-symbols-outlined text-[18px]">sports_gymnastics</span>
+              Ver como aluno
+            </Button>
+          </Link>
           <Button variant="outline" size="sm" onClick={() => setEditing(true)}>
             <span className="material-symbols-outlined text-[18px]">edit</span>
             Editar
