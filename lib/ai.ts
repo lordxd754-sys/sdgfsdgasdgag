@@ -1,4 +1,26 @@
+import Anthropic from "@anthropic-ai/sdk";
+
 const MODEL = "gemini-2.5-flash";
+
+export async function aiCompleteAnthropic(
+  userPrompt: string,
+  systemPrompt: string,
+  maxTokens = 4096
+): Promise<string> {
+  if (!process.env.ANTHROPIC_API_KEY) {
+    throw new Error("ANTHROPIC_API_KEY não configurada. Configure nas variáveis de ambiente.");
+  }
+  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  const response = await client.messages.create({
+    model: "claude-sonnet-4-6",
+    max_tokens: maxTokens,
+    system: systemPrompt,
+    messages: [{ role: "user", content: userPrompt }],
+  });
+  const text = response.content[0].type === "text" ? response.content[0].text : "";
+  if (!text) throw new Error("A IA retornou uma resposta vazia. Tente novamente.");
+  return text;
+}
 
 export async function aiComplete(prompt: string, maxTokens = 1024): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
