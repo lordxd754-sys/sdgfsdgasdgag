@@ -87,12 +87,22 @@ export default async function AlunosPage({
           <h1 className="text-headline-lg font-bold text-on-surface">Alunos</h1>
           <p className="mt-1 text-label-md text-on-surface-variant">{total} alunos cadastrados</p>
         </div>
-        <Link href="/alunos/novo">
-          <Button>
-            <span className="material-symbols-outlined text-[18px]">person_add</span>
-            Novo aluno
-          </Button>
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/formularios" className="relative inline-flex items-center justify-center h-10 w-10 rounded-xl text-on-surface-variant hover:text-primary hover:bg-surface-container-high transition-all" title="Formulários recebidos">
+            <span className="material-symbols-outlined text-[22px]">description</span>
+            {newForms > 0 && (
+              <span className="absolute -top-1 -right-1 flex h-5 min-w-[20px] items-center justify-center rounded-full bg-primary px-1 text-xs font-bold text-on-primary">
+                {newForms > 99 ? "99+" : newForms}
+              </span>
+            )}
+          </Link>
+          <Link href="/alunos/novo">
+            <Button>
+              <span className="material-symbols-outlined text-[18px]">person_add</span>
+              Novo aluno
+            </Button>
+          </Link>
+        </div>
       </div>
 
       <StudentFilters q={q} status={status} level={level} />

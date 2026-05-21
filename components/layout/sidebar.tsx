@@ -22,7 +22,6 @@ export function Sidebar({ formCount = 0, overdueCount = 0 }: SidebarProps) {
   const navItems: NavItem[] = [
     { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/alunos", label: "Alunos", icon: "group" },
-    { href: "/formularios", label: "Formulários", icon: "description", badge: formCount },
     { href: "/treinos", label: "Treinos", icon: "fitness_center" },
     { href: "/treino", label: "Módulo Aluno", icon: "sports_gymnastics" },
     { href: "/acompanhamento", label: "Acompanhamento", icon: "monitoring", badge: overdueCount },
@@ -41,12 +40,11 @@ export function Sidebar({ formCount = 0, overdueCount = 0 }: SidebarProps) {
     return pathname.startsWith(href);
   };
 
-  // Bottom nav items (mobile — 5 items)
+  // Bottom nav items (mobile — 4 items)
   const bottomNavItems = [
     { href: "/dashboard", label: "Dashboard", icon: "dashboard" },
     { href: "/alunos", label: "Alunos", icon: "group" },
     { href: "/treino", label: "Treino", icon: "sports_gymnastics" },
-    { href: "/formularios", label: "Formulários", icon: "description", badge: formCount },
     { href: "/configuracoes", label: "Ajustes", icon: "settings" },
   ];
 
@@ -118,9 +116,6 @@ export function Sidebar({ formCount = 0, overdueCount = 0 }: SidebarProps) {
             >
               <span className="material-symbols-outlined text-[24px]">{item.icon}</span>
               <span className="text-label-sm mt-0.5">{item.label}</span>
-              {item.badge != null && item.badge > 0 && (
-                <span className="absolute -top-1 right-0 w-2 h-2 rounded-full bg-primary" />
-              )}
             </Link>
           );
         })}

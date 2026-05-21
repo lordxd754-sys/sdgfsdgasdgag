@@ -28,6 +28,25 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
   const [createModal, setCreateModal] = useState<FormResponse | null>(null);
   const [creating, setCreating] = useState(false);
   const [discarding, setDiscarding] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<string | null>(null);
+
+  async function handleProcess(form: FormResponse) {
+    setProcessing(form.id);
+    const res = await fetch(`/api/forms/${form.id}/process`, { method: "POST" });
+    if (res.ok) {
+      toast("Aluno cadastrado automaticamente!");
+      router.refresh();
+    } else {
+      const data = await res.json().catch(() => ({}));
+      // If name extraction failed, fall back to manual creation
+      if (res.status === 422) {
+        setCreateModal(form);
+      } else {
+        toast(data.error || "Erro ao processar formulário", "error");
+      }
+    }
+    setProcessing(null);
+  }
 
   async function handleCreate(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -116,9 +135,19 @@ export function FormList({ forms }: { forms: FormResponse[] }) {
                         </Button>
                         {form.status === "novo" && (
                           <>
-                            <Button size="sm" onClick={() => setCreateModal(form)}>
+                            <Button
+                              size="sm"
+                              onClick={() => handleProcess(form)}
+                              disabled={processing === form.id}
+                            >
+                              <span className={`material-symbols-outlined text-[16px] ${processing === form.id ? "animate-spin" : ""}`}>
+                                {processing === form.id ? "refresh" : "auto_fix_high"}
+                              </span>
+                              {processing === form.id ? "Processando…" : "Processar"}
+                            </Button>
+                            <Button variant="outline" size="sm" onClick={() => setCreateModal(form)}>
                               <span className="material-symbols-outlined text-[16px]">person_add</span>
-                              Criar aluno
+                              Manual
                             </Button>
                             <Button
                               variant="ghost"

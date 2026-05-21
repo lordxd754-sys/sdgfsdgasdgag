@@ -28,9 +28,11 @@ function parseRaw(rawData: string): Record<string, unknown> {
 }
 
 function find(data: Record<string, unknown>, ...keys: string[]): string {
+  // Exact key match first
   for (const k of keys) {
     if (data[k] !== undefined && data[k] !== "") return flattenField(data[k]);
   }
+  // Partial key match (case-insensitive)
   for (const k of keys) {
     const match = Object.keys(data).find((dk) =>
       dk.toLowerCase().includes(k.toLowerCase())
@@ -55,21 +57,53 @@ export interface ExtractedStudent {
   notes: string;
 }
 
+// Name-like pattern: "João Silva" or "JOÃO SILVA" or "joão da silva" — 2+ words of letters
+const NAME_RE = /^[A-Za-zÀ-ÖØ-öø-ÿ]{2,}(?:\s+[A-Za-zÀ-ÖØ-öø-ÿ']{2,})+$/;
+
 export function extractStudentFromRaw(rawData: string): ExtractedStudent {
   const data = parseRaw(rawData);
+
+  let name = find(
+    data,
+    // Portuguese
+    "nome", "nome_completo", "nomeCompleto", "nomeDoAluno", "seu_nome", "seuNome",
+    // English / JotForm defaults
+    "name", "fullName", "full_name", "yourName", "your_name",
+    // First + last combined
+    "firstName", "first_name", "lastName", "last_name",
+  );
+
+  // If first+last were found separately, try to combine them
+  if (!name) {
+    const first = find(data, "firstName", "first_name", "nome", "primeiro");
+    const last = find(data, "lastName", "last_name", "sobrenome", "ultimo");
+    if (first && last) name = `${first} ${last}`.trim();
+  }
+
+  // Last resort: scan all string values for something that looks like a full name
+  if (!name) {
+    for (const val of Object.values(data)) {
+      const str = flattenField(val);
+      if (str.length > 4 && str.length < 80 && NAME_RE.test(str)) {
+        name = str;
+        break;
+      }
+    }
+  }
+
   return {
-    name: find(data, "nome", "name", "nome_completo", "fullName", "full_name"),
-    email: find(data, "email", "emailAddress", "e-mail", "email_address"),
-    phone: find(data, "phone", "telefone", "whatsapp", "celular", "phoneNumber"),
-    goal: find(data, "objetivo", "goal", "meta", "objetivo_principal"),
-    level: find(data, "nivel", "level", "nível", "experiencia", "experiência"),
-    daysPerWeek: find(data, "diasPorSemana", "dias_por_semana", "daysPerWeek", "dias_semana"),
-    sessionDuration: find(data, "duracaoSessao", "duracao_sessao", "sessionDuration", "duracao"),
-    restrictions: find(data, "restricoes", "restrictions", "restrições", "lesoes", "lesões"),
-    equipment: find(data, "equipamentos", "equipment", "equipamento"),
-    birthdate: find(data, "dataNascimento", "data_nascimento", "birthdate", "nascimento"),
-    city: find(data, "cidade", "city", "municipio", "município"),
-    notes: find(data, "observacoes", "observações", "notes", "anotacoes", "outros"),
+    name,
+    email: find(data, "email", "emailAddress", "e-mail", "email_address", "emailDoAluno"),
+    phone: find(data, "phone", "telefone", "whatsapp", "celular", "phoneNumber", "contato"),
+    goal: find(data, "objetivo", "goal", "meta", "objetivo_principal", "seusObjetivos", "objetivos"),
+    level: find(data, "nivel", "level", "nível", "experiencia", "experiência", "nivelDeExperiencia"),
+    daysPerWeek: find(data, "diasPorSemana", "dias_por_semana", "daysPerWeek", "dias_semana", "quantosDias"),
+    sessionDuration: find(data, "duracaoSessao", "duracao_sessao", "sessionDuration", "duracao", "tempoSessao"),
+    restrictions: find(data, "restricoes", "restrictions", "restrições", "lesoes", "lesões", "restricaoMedica"),
+    equipment: find(data, "equipamentos", "equipment", "equipamento", "materiais"),
+    birthdate: find(data, "dataNascimento", "data_nascimento", "birthdate", "nascimento", "dataDeNascimento"),
+    city: find(data, "cidade", "city", "municipio", "município", "localidade"),
+    notes: find(data, "observacoes", "observações", "notes", "anotacoes", "outros", "informacoesAdicionais"),
   };
 }
 
