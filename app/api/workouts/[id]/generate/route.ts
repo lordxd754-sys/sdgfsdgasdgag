@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import { aiCompleteAnthropic, extractJson } from "@/lib/ai";
+import { aiComplete, extractJson } from "@/lib/ai";
 
 const SYSTEM_PROMPT_PERSONAL = `Você é um Personal Trainer especialista de alto nível, com formação completa em Educação Física e mais de 15 anos de experiência prática em consultoria online e presencial. Suas áreas de especialização incluem:
 
@@ -153,9 +153,9 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
     const session = await auth();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.GEMINI_API_KEY) {
       return NextResponse.json(
-        { error: "ANTHROPIC_API_KEY não configurada. Acesse as configurações da Vercel." },
+        { error: "GEMINI_API_KEY não configurada. Acesse as configurações da Vercel." },
         { status: 500 }
       );
     }
@@ -182,7 +182,7 @@ export async function POST(_req: NextRequest, { params }: { params: { id: string
       return NextResponse.json({ error: "Aluno não encontrado" }, { status: 404 });
 
     const userPrompt = buildWorkoutPrompt(student, settings as any);
-    const rawText = await aiCompleteAnthropic(userPrompt, SYSTEM_PROMPT_PERSONAL, 4096);
+    const rawText = await aiComplete(userPrompt, 4096, SYSTEM_PROMPT_PERSONAL);
 
     // Strip markdown code fences Claude sometimes adds despite instructions
     const cleanJson = rawText
