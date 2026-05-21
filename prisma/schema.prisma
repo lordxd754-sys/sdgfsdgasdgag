@@ -86,6 +86,30 @@ model Exercise {
   rest      Int            @default(60)
   notes     String?
   order     Int
+  videoUrl  String?
+}
+
+model WorkoutExecution {
+  id         String    @id @default(cuid())
+  studentId  String
+  workoutId  String
+  sessionId  String
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  duration   Int?
+  notes      String?
+  setLogs    SetLog[]
+}
+
+model SetLog {
+  id          String           @id @default(cuid())
+  executionId String
+  execution   WorkoutExecution @relation(fields: [executionId], references: [id], onDelete: Cascade)
+  exerciseId  String
+  setNumber   Int
+  reps        Int
+  weight      Float            @default(0)
+  completedAt DateTime         @default(now())
 }
 
 model FollowUp {
